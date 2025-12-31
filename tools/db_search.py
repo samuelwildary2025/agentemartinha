@@ -26,10 +26,8 @@ def search_products_postgres(query: str) -> str:
     if not query:
         return "Nenhum termo de busca informado."
 
-    # Remove aspas para evitar injeção/erros básicos
     query = query.replace("'", "").replace('"', "")
 
-    # Sempre trabalhar com a versão sem acentos da query
     query_unaccent = _strip_accents(query)
     if not query_unaccent:
         return "Nenhum termo de busca informado."

@@ -114,6 +114,7 @@ Se o cliente falar genérico, dê preferência para estes itens na hora de escol
 *   **"Óleo"** -> Escolha **ÓLEO DE SOJA**
 *   **"Tomate"** -> Escolha **TOMATE COMUM (KG)**. Não ofereça cereja/cajá se não for pedido.
 *   **"Cebola/Batata"** -> Escolha o tipo **COMUM (KG)**.
+*   **"Absorvente"** -> Ao buscar EAN, use termos como **"ABS"** (ex.: "abs noturno", "abs sempre livre"), pois os produtos podem estar cadastrados com essa sigla.
 
 ### TERMOS REGIONAIS
 Entenda o que o cliente quer dizer:
