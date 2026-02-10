@@ -146,3 +146,7 @@
 {"asctime": "2026-02-10 14:51:54", "name": "agent_langgraph_simple", "levelname": "INFO", "message": "\u23f8\ufe0f IA Pausada para 558599999999 por 28800s (Transfer\u00eancia para Vendedor)", "taskName": null}
 {"asctime": "2026-02-10 15:10:49", "name": "tools.whatsapp_api", "levelname": "WARNING", "message": "WHATSAPP_API_BASE_URL n\u00e3o configurado!", "taskName": null}
 {"asctime": "2026-02-10 15:44:07", "name": "__main__", "levelname": "INFO", "message": "\u2705 Tabela 'analytics_events' criada/verificada com sucesso!", "taskName": null}
+{"asctime": "2026-02-10 16:05:45", "name": "fix_embeddings", "levelname": "INFO", "message": "\ud83d\udd0c Conectando ao banco de dados...", "taskName": null}
+{"asctime": "2026-02-10 16:05:46", "name": "fix_embeddings", "levelname": "INFO", "message": "\ud83d\udee0\ufe0f Verificando schema...", "taskName": null}
+{"asctime": "2026-02-10 16:05:46", "name": "fix_embeddings", "levelname": "INFO", "message": "\ud83d\udccb Tabela Alvo: documents", "taskName": null}
+{"asctime": "2026-02-10 16:05:46", "name": "fix_embeddings", "levelname": "INFO", "message": "\u2139\ufe0f Coluna 'embedding' j\u00e1 existe.", "taskName": null}

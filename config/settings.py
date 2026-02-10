@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     # Postgres (Memória + Produtos - Mesmo banco)
     postgres_connection_string: str = "postgres://postgres:85885885@31.97.252.6:6087/festinfan-bd-produtos?sslmode=disable"
     postgres_table_name: str = "memoria"
-    postgres_products_table_name: str = "produtos"
+    postgres_products_table_name: str = "documents"
     postgres_message_limit: int = 8
     
     # Banco de Produtos (Postgres)
