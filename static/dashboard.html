@@ -552,31 +552,69 @@
                     `;
                 });
 
-                renderChart();
+                // Hourly Activity
+                // Prepare 08h-22h buckets
+                const hours = [];
+                const counts = [];
+
+                // Initialize map for 08h to 20h (business hours)
+                const activityMap = {};
+                for (let i = 8; i <= 20; i += 2) {
+                    activityMap[i] = 0;
+                }
+
+                if (stats.hourly_activity) {
+                    stats.hourly_activity.forEach(item => {
+                        const h = parseInt(item.hour);
+                        // Group into 2h buckets for smoother chart
+                        const bucket = h - (h % 2);
+                        if (activityMap[bucket] !== undefined) {
+                            activityMap[bucket] += item.count;
+                        }
+                    });
+                }
+
+                const chartLabels = Object.keys(activityMap).map(h => `${h}h`);
+                const chartData = Object.values(activityMap);
+
+                renderChart(chartLabels, chartData);
 
             } catch (e) { console.error(e); }
         }
 
-        function renderChart() {
+        let chartInstance = null;
+
+        function renderChart(labels, data) {
             const ctx = document.getElementById('chartActivity').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
             gradient.addColorStop(0, 'rgba(0, 113, 227, 0.2)');
             gradient.addColorStop(1, 'rgba(0, 113, 227, 0)');
 
-            new Chart(ctx, {
+            // Default if empty
+            if (!labels || labels.length === 0) {
+                labels = ['08h', '10h', '12h', '14h', '16h', '18h', '20h'];
+                data = [0, 0, 0, 0, 0, 0, 0];
+            }
+
+            chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['08h', '10h', '12h', '14h', '16h', '18h', '20h'],
+                    labels: labels,
                     datasets: [{
                         label: 'Interações',
-                        data: [5, 12, 18, 14, 22, 15, 8],
+                        data: data,
                         borderColor: '#0071E3',
                         backgroundColor: gradient,
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
-                        pointRadius: 0,
-                        pointHoverRadius: 4
+                        pointRadius: 3,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
@@ -584,7 +622,12 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { border: { display: false }, grid: { color: '#F0F0F0' }, ticks: { maxTicksLimit: 5 } },
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { color: '#F0F0F0' },
+                            ticks: { maxTicksLimit: 5, precision: 0 }
+                        },
                         x: { grid: { display: false } }
                     }
                 }
