@@ -69,10 +69,9 @@ def get_daily_stats():
         stats["total_orders"] = cur.fetchone()['total']
         
         # 3. Top Produtos (Baseado em 'product_search' metadata)
-        # Assumindo que metadata tem { "query": "..." } ou { "product": "..." }
-        # Vamos contar as queries de busca hoje
+        # Prioriza 'found_product' (o que achou no banco), fallback para 'query' (o que digitou)
         cur.execute("""
-            SELECT metadata->>'query' as product, COUNT(*) as count
+            SELECT COALESCE(metadata->>'found_product', metadata->>'query') as product, COUNT(*) as count
             FROM analytics_events
             WHERE event_type = 'product_search' AND created_at >= CURRENT_DATE
             GROUP BY product

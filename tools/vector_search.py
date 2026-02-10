@@ -38,16 +38,7 @@ def search_products_vector(query: str, telefone_cliente: str = "") -> str:
     if not query:
         return "Nenhum termo de busca informado."
         
-    # LOG ANALYTICS
-    try:
-        from tools.analytics import log_event
-        if telefone_cliente:
-            # Limpar telefone
-            import re
-            tel = re.sub(r"\D", "", telefone_cliente)
-            log_event(tel, "product_search", {"query": query})
-    except Exception as e:
-        logger.error(f"Erro analytics vector: {e}")
+    # LOG ANALYTICS MOVED TO END
 
     # 1. Gerar Embedding da Query
     vector = get_embedding(query)
@@ -97,6 +88,32 @@ def search_products_vector(query: str, telefone_cliente: str = "") -> str:
                     if combined > 0.3:
                         filtered.append(r)
                 
+                # LOG ANALYTICS (Deferred to capture result)
+                try:
+                    from tools.analytics import log_event
+                    if telefone_cliente:
+                        import re
+                        tel = re.sub(r"\D", "", telefone_cliente)
+                        
+                        # Determine what to log
+                        meta = {"query": query}
+                        
+                        # If we found something relevant
+                        top_product = None
+                        if filtered: top_product = filtered[0]
+                        elif results: top_product = results[0] # Fallback
+                        
+                        if top_product:
+                            # Try to get clean name from metadata, else content
+                            p_meta = top_product.get("metadata") or {}
+                            p_name = p_meta.get("product") or p_meta.get("nome") or top_product.get("content")
+                            if p_name:
+                                meta["found_product"] = str(p_name)[:100] # Limit length
+                        
+                        log_event(tel, "product_search", meta)
+                except Exception as e:
+                    logger.error(f"Erro analytics vector: {e}")
+
                 if not filtered:
                     # Se todos forem muito ruins, retorna os top 3 mesmo assim mas com aviso
                     return _format_results(results[:3], warning=True)
