@@ -53,9 +53,13 @@ class LimitedPostgresChatMessageHistory(BaseChatMessageHistory):
         """Obtém mensagens (contexto otimizado)."""
         return self.get_optimized_context()
     
-    def add_message(self, message: BaseMessage) -> None:
+    def add_message(self, message: BaseMessage, sender: str = "cliente") -> None:
         """
         Adiciona uma mensagem ao banco de dados com SQL manual e COMMIT explícito.
+        
+        Args:
+            message: A mensagem a ser salva
+            sender: Quem enviou a mensagem ('cliente', 'ia', 'atendente')
         """
         conn = None
         try:
@@ -67,16 +71,16 @@ class LimitedPostgresChatMessageHistory(BaseChatMessageHistory):
             conn = psycopg2.connect(self.connection_string)
             cursor = conn.cursor()
             
-            # Query de inserção direta
+            # Query de inserção com sender
             query = f"""
-                INSERT INTO {self.table_name} (session_id, message)
-                VALUES (%s, %s)
+                INSERT INTO {self.table_name} (session_id, message, sender)
+                VALUES (%s, %s, %s)
             """
             
-            cursor.execute(query, (self.session_id, msg_json))
+            cursor.execute(query, (self.session_id, msg_json, sender))
             conn.commit() # <--- O PULO DO GATO: Commit explícito
             
-            logger.info(f"📝 Mensagem persistida manualmente no DB para {self.session_id}")
+            logger.info(f"📝 Mensagem [{sender}] persistida no DB para {self.session_id}")
             
             cursor.close()
             
@@ -91,6 +95,21 @@ class LimitedPostgresChatMessageHistory(BaseChatMessageHistory):
         finally:
             if conn:
                 conn.close()
+    
+    def add_user_message(self, content: str) -> None:
+        """Adiciona mensagem do cliente."""
+        from langchain_core.messages import HumanMessage
+        self.add_message(HumanMessage(content=content), sender="cliente")
+    
+    def add_ai_message(self, content: str) -> None:
+        """Adiciona resposta da IA."""
+        from langchain_core.messages import AIMessage
+        self.add_message(AIMessage(content=content), sender="ia")
+    
+    def add_human_agent_message(self, content: str) -> None:
+        """Adiciona mensagem do atendente humano."""
+        from langchain_core.messages import HumanMessage
+        self.add_message(HumanMessage(content=content), sender="atendente")
     
     def clear(self) -> None:
         """Limpa todas as mensagens da sessão."""

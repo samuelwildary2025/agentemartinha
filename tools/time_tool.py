@@ -12,24 +12,24 @@ from config.settings import settings
 logger = setup_logger(__name__)
 
 
-def get_current_time(timezone: str = "America/Sao_Paulo") -> str:
+def get_current_time(timezone: str = "America/Fortaleza") -> str:
     """
-    Retorna a data e hora atual no fuso horário especificado.
+    Retorna a data, hora atual e status de funcionamento da loja.
     
     Args:
-        timezone: Fuso horário (padrão: America/Sao_Paulo)
+        timezone: Fuso horário (padrão: America/Fortaleza - Ceará)
     
     Returns:
-        String formatada com data e hora
+        String formatada com data, hora e status da loja
     """
     try:
         tz = pytz.timezone(timezone)
         now = datetime.datetime.now(tz)
         
         # Formato amigável
-        formatted_time = now.strftime("%d/%m/%Y às %H:%M:%S (%Z)")
+        formatted_time = now.strftime("%d/%m/%Y às %H:%M")
         
-        # Informações adicionais
+        # Dia da semana
         day_of_week = now.strftime("%A")
         day_names = {
             "Monday": "Segunda-feira",
@@ -41,10 +41,46 @@ def get_current_time(timezone: str = "America/Sao_Paulo") -> str:
             "Sunday": "Domingo"
         }
         day_pt = day_names.get(day_of_week, day_of_week)
+        weekday = now.weekday()  # 0=Segunda, 6=Domingo
+        hour = now.hour
+        minute = now.minute
         
-        result = f"📅 {day_pt}, {formatted_time}"
+        # Verificar horário de funcionamento
+        # Segunda a Sexta: 07:30–17:00
+        # Sábado: 07:30–14:00 (sem atendimento online)
+        # Domingo: fechado
         
-        logger.info(f"Hora atual consultada: {result}")
+        loja_status = ""
+        atendimento_online = ""
+        
+        if weekday == 6:  # Domingo
+            loja_status = "🚫 LOJA FECHADA (Domingo)"
+            atendimento_online = "Sem atendimento online. Pedidos serão vistos na segunda-feira."
+        elif weekday == 5:  # Sábado
+            if hour < 7 or (hour == 7 and minute < 30):
+                loja_status = "🌙 ANTES DO EXPEDIENTE (Sábado abre às 07:30)"
+            elif hour >= 14:
+                loja_status = "🌙 APÓS O EXPEDIENTE (Sábado fecha às 14:00)"
+            else:
+                loja_status = "🟢 LOJA ABERTA (Sábado até 14:00)"
+            atendimento_online = "⚠️ Sábado NÃO tem atendimento online. Vendedora verá pedidos na segunda."
+        else:  # Segunda a Sexta
+            if hour < 7 or (hour == 7 and minute < 30):
+                loja_status = "🌙 ANTES DO EXPEDIENTE (Abre às 07:30)"
+                atendimento_online = "Fora do horário. Vendedora verá mensagens ao abrir."
+            elif hour >= 17:
+                loja_status = "🌙 APÓS O EXPEDIENTE (Fechou às 17:00)"
+                atendimento_online = "Fora do horário. Vendedora verá mensagens amanhã."
+            else:
+                loja_status = "🟢 LOJA ABERTA (Até 17:00)"
+                atendimento_online = "Atendimento online disponível."
+        
+        result = f"""📅 {day_pt}, {formatted_time}
+
+{loja_status}
+{atendimento_online}"""
+        
+        logger.info(f"Hora atual consultada: {day_pt} {hour}:{minute:02d} - Status: {loja_status}")
         return result
     
     except pytz.exceptions.UnknownTimeZoneError:

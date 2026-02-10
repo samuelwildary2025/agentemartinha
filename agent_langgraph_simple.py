@@ -1,6 +1,6 @@
 """
-Agente de IA para Atendimento de Supermercado usando LangGraph
-Versão com suporte a VISÃO e Pedidos com Comprovante
+Agente de IA para Atendimento de Varejo usando LangGraph
+Versão com suporte a VISÃO
 """
 
 from typing import Dict, Any, TypedDict, Sequence, List
@@ -21,15 +21,8 @@ import os
 
 from config.settings import settings
 from config.logger import setup_logger
-from tools.http_tools import estoque, pedidos, alterar, ean_lookup, estoque_preco, busca_lote_produtos
-from tools.time_tool import get_current_time, search_message_history
-from tools.redis_tools import (
-    mark_order_sent, 
-    add_item_to_cart, 
-    get_cart_items, 
-    remove_item_from_cart, 
-    clear_cart
-)
+from tools.db_search import conhecimento
+from tools.time_tool import get_current_time
 from memory.limited_postgres_memory import LimitedPostgresChatMessageHistory
 
 logger = setup_logger(__name__)
@@ -39,190 +32,60 @@ logger = setup_logger(__name__)
 # ============================================
 
 @tool
-def estoque_tool(url: str) -> str:
+def especialista_humano(consulta: str = "", telefone_cliente: str = "") -> str:
     """
-    Consultar estoque e preço atual dos produtos no sistema do supermercado.
-    Ex: 'https://.../api/produtos/consulta?nome=arroz'
-    """
-    return estoque(url)
-
-@tool
-def add_item_tool(telefone: str, produto: str, quantidade: float = 1.0, observacao: str = "", preco: float = 0.0) -> str:
-    """
-    Adicionar um item ao carrinho de compras do cliente.
-    USAR IMEDIATAMENTE quando o cliente demonstrar intenção de compra.
-    """
-    item = {
-        "produto": produto,
-        "quantidade": quantidade,
-        "observacao": observacao,
-        "preco": preco
-    }
-    import json as json_lib
-    if add_item_to_cart(telefone, json_lib.dumps(item, ensure_ascii=False)):
-        return f"✅ Item '{produto}' ({quantidade}) adicionado ao carrinho."
-    return "❌ Erro ao adicionar item. Tente novamente."
-
-@tool
-def view_cart_tool(telefone: str) -> str:
-    """
-    Ver os itens atuais no carrinho do cliente.
-    """
-    items = get_cart_items(telefone)
-    if not items:
-        return "🛒 O carrinho está vazio."
+    Transfer the conversation to a human specialist whenever the customer's request is outside the AI agent's scope,
+    when more complex human intervention is required, or when all relevant information has already been collected.
     
-    summary = ["🛒 **Carrinho Atual:**"]
-    total_estimado = 0.0
-    for i, item in enumerate(items):
-        qtd = item.get("quantidade", 1)
-        nome = item.get("produto", "?")
-        obs = item.get("observacao", "")
-        preco = item.get("preco", 0.0)
-        subtotal = qtd * preco
-        total_estimado += subtotal
-        
-        desc = f"{i+1}. {nome} (x{qtd})"
-        if preco > 0:
-            desc += f" - R$ {subtotal:.2f}"
-        if obs:
-            desc += f" [Obs: {obs}]"
-        summary.append(desc)
-    
-    if total_estimado > 0:
-        summary.append(f"\n💰 **Total Estimado:** R$ {total_estimado:.2f}")
-        
-    return "\n".join(summary)
-
-@tool
-def remove_item_tool(telefone: str, item_index: int) -> str:
-    """
-    Remover um item do carrinho pelo número (índice 1-based, como mostrado no view_cart).
-    Ex: Para remover o item 1, passe 1.
-    """
-    # Converter de 1-based para 0-based
-    idx = int(item_index) - 1
-    if remove_item_from_cart(telefone, idx):
-        return f"✅ Item {item_index} removido do carrinho."
-    return "❌ Erro ao remover item (índice inválido?)."
-
-@tool
-def finalizar_pedido_tool(cliente: str, telefone: str, endereco: str, forma_pagamento: str, observacao: str = "", comprovante: str = "") -> str:
-    """
-    Finalizar o pedido usando os itens que estão no carrinho.
-    Use quando o cliente confirmar que quer fechar a compra.
+    Use this tool if you are unable to resolve the customer's query using the knowledge base,
+    if the customer explicitly requests to speak with a human, or if the situation requires personalized or sensitive handling.
     
     Args:
-    - cliente: Nome do cliente
-    - telefone: Telefone (com DDD)
-    - endereco: Endereço de entrega (rua, número, bairro)
-    - forma_pagamento: PIX, DINHEIRO, CARTAO
-    - observacao: Observações do pedido (opcional)
-    - comprovante: URL do comprovante (opcional)
+        consulta: Resumo do pedido ou motivo da transferência
+        telefone_cliente: Número do telefone do cliente (extraído de TELEFONE_CLIENTE no contexto)
     """
-    import json as json_lib
+    from tools.whatsapp_api import whatsapp
+    from config.settings import settings
+    from tools.redis_tools import set_agent_cooldown
     
-    # 1. Obter itens do Redis
-    items = get_cart_items(telefone)
-    if not items:
-        return "❌ O carrinho está vazio! Adicione itens antes de finalizar."
+    # Adicionar etiqueta "Novo Pedido" se configurada
+    label_id = settings.novo_pedido_label_id
+    if telefone_cliente:
+        try:
+            # Limpar telefone (remover não-numéricos)
+            import re
+            telefone_limpo = re.sub(r"\D", "", telefone_cliente)
+            
+            # 1. Adicionar Etiqueta
+            if label_id:
+                success = whatsapp.add_label_to_chat(telefone_limpo, label_id)
+                if success:
+                    logger.info(f"🏷️ Etiqueta 'Novo Pedido' adicionada ao chat {telefone_limpo}")
+            
+            # 2. Pausar IA (Cooldown)
+            ttl = settings.human_takeover_ttl
+            set_agent_cooldown(telefone_limpo, ttl)
+            logger.info(f"⏸️ IA Pausada para {telefone_limpo} por {ttl}s (Transferência para Vendedor)")
+            
+            # 3. Log Analytics
+            from tools.analytics import log_event
+            log_event(telefone_limpo, "human_handoff", {"reason": consulta})
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar transferência: {e}")
     
-    # 2. Calcular total e formatar itens para API
-    total = 0.0
-    itens_formatados = []
-    
-    for item in items:
-        preco = item.get("preco", 0.0)
-        quantidade = item.get("quantidade", 1.0)
-        total += preco * quantidade
-        
-        # Formatar item para API (campos corretos)
-        itens_formatados.append({
-            "nome_produto": item.get("produto", item.get("nome_produto", "Produto")),
-            "quantidade": int(quantidade),
-            "preco_unitario": preco
-        })
-        
-    # 3. Montar payload do pedido (campos corretos para API)
-    payload = {
-        "nome_cliente": cliente,
-        "telefone": telefone,
-        "endereco": endereco or "A combinar",
-        "forma": forma_pagamento,
-        "observacao": observacao or "",
-        "itens": itens_formatados
-    }
-    
-    json_body = json_lib.dumps(payload, ensure_ascii=False)
-    
-    # 4. Enviar via HTTP
-    result = pedidos(json_body)
-    
-    # 5. Se sucesso, limpar carrinho e marcar status
-    if "sucesso" in result.lower() or "✅" in result:
-        clear_cart(telefone)
-        mark_order_sent(telefone)
-        
-    return result
-
-@tool
-def alterar_tool(telefone: str, json_body: str) -> str:
-    """Atualizar o pedido no painel (para pedidos JÁ enviados)."""
-    return alterar(telefone, json_body)
-
-@tool
-def search_history_tool(telefone: str, keyword: str = None) -> str:
-    """Busca mensagens anteriores do cliente com horários."""
-    return search_message_history(telefone, keyword)
+    return "TRANSBORDO_HUMANO: Transferindo para um vendedor finalizar o pedido."
 
 @tool
 def time_tool() -> str:
-    """Retorna a data e hora atual."""
+    """Retorna a data e hora atual e o status de funcionamento da loja."""
     return get_current_time()
 
-@tool("ean")
-def ean_tool_alias(query: str) -> str:
-    """Buscar EAN/infos do produto na base de conhecimento."""
-    q = (query or "").strip()
-    if q.startswith("{") and q.endswith("}"): q = ""
-    return ean_lookup(q)
-
-@tool("estoque")
-def estoque_preco_alias(ean: str) -> str:
-    """Consulta preço e disponibilidade pelo EAN (apenas dígitos)."""
-    return estoque_preco(ean)
-
-@tool("busca_lote")
-def busca_lote_tool(produtos: str) -> str:
-    """
-    Busca MÚLTIPLOS produtos de uma vez em paralelo. Use quando o cliente pedir vários itens.
-    
-    Args:
-        produtos: Lista de produtos separados por vírgula.
-                  Ex: "suco de acerola, suco de caju, arroz, feijão"
-    
-    Returns:
-        Lista formatada com todos os produtos encontrados e seus preços.
-    """
-    # Converter string em lista
-    lista_produtos = [p.strip() for p in produtos.split(",") if p.strip()]
-    if not lista_produtos:
-        return "❌ Informe os produtos separados por vírgula."
-    return busca_lote_produtos(lista_produtos)
-
-# Ferramentas ativas
+# Ferramentas ativas (Alinhadas com n8n)
 ACTIVE_TOOLS = [
-    ean_tool_alias,
-    estoque_preco_alias,
-    busca_lote_tool,  # Nova tool para busca em lote
-    estoque_tool,
+    conhecimento,
+    especialista_humano,
     time_tool,
-    search_history_tool,
-    add_item_tool,
-    view_cart_tool,
-    remove_item_tool,
-    finalizar_pedido_tool,
-    alterar_tool,
 ]
 
 # ============================================
@@ -266,7 +129,19 @@ def create_agent_with_history():
     system_prompt = load_system_prompt()
     llm = _build_llm()
     memory = MemorySaver()
-    agent = create_react_agent(llm, ACTIVE_TOOLS, prompt=system_prompt, checkpointer=memory)
+    
+    # Substituindo a busca antiga pela vetorial
+    # Mantemos o nome 'conhecimento' para não quebrar o prompt
+    from tools.vector_search import conhecimento_vetorial
+    
+    tools_list = [
+        conhecimento_vetorial,
+        especialista_humano,
+        time_tool
+    ]
+    
+    # Atualizar o prompt para refletir que agora ele "entende" melhor
+    agent = create_react_agent(llm, tools_list, prompt=system_prompt, checkpointer=memory)
     return agent
 
 _agent_graph = None
@@ -406,87 +281,19 @@ def run_agent_langgraph(telefone: str, mensagem: str) -> Dict[str, Any]:
                 if last_ai:
                     logger.warning(f"⚠️ Última AIMessage rejeitada: content='{str(last_ai.content)[:200]}' tool_calls={getattr(last_ai, 'tool_calls', None)}")
             
-            # FALLBACK INTELIGENTE: Analisa as mensagens de tool para gerar resposta útil
-            tool_results = []
-            produtos_encontrados = []
-            precos_encontrados: List[str] = []
-            nao_encontrados_list: List[str] = []
+            # FALLBACK SIMPLIFICADO (Adaptado para nova lógica n8n)
+            # Se o agente chamou uma tool mas não gerou resposta final, tentamos inferir algo ou pedir desculpas.
+            # No caso do n8n, se chamar 'especialista_humano', o próprio retorno da tool já é a resposta.
             
+            tool_results = []
             for msg in result.get("messages", []):
                 if hasattr(msg, 'content') and isinstance(msg.content, str):
                     content = msg.content
-                    # Detectar resposta de estoque vazio
-                    if "0 item" in content or "disponíveis após filtragem" in content or "[]" in content:
-                        tool_results.append("sem_estoque")
-                    # Detectar busca de EAN e extrair nomes dos produtos
-                    elif "EANS_ENCONTRADOS" in content:
-                        tool_results.append("ean_encontrado")
-                        # Extrair nomes dos produtos (formato: "1) EAN - NOME PRODUTO")
-                        matches = re.findall(r'\d+\) \d+ - ([A-Z][^\n;]+)', content)
-                        if matches:
-                            produtos_encontrados.extend(matches[:3])  # Pegar até 3 produtos
-                    # Detectar produto não encontrado
-                    elif "Nenhum produto encontrado" in content or "não encontrado" in content.lower():
-                        tool_results.append("nao_encontrado")
-                    # Detectar formato da busca em lote
-                    elif "PRODUTOS_ENCONTRADOS:" in content:
-                        tool_results.append("busca_lote_ok")
-                        # Capturar linhas com "• Nome - R$ XX,YY"
-                        linhas = content.split("\n")
-                        for ln in linhas:
-                            ln_str = ln.strip()
-                            if ln_str.startswith("• ") and ("R$" in ln_str or "R$" in ln_str.replace(" ", "")):
-                                precos_encontrados.append(ln_str[2:].strip())
-                    elif "NÃO_ENCONTRADOS:" in content or "NAO_ENCONTRADOS:" in content:
-                        # Extrair lista após os dois pontos
-                        try:
-                            parte = content.split(":", 1)[1]
-                            nomes = [x.strip() for x in parte.split(",") if x.strip()]
-                            nao_encontrados_list.extend(nomes)
-                        except Exception:
-                            pass
-                    # Detectar SUCESSO na busca em lote (Fallback para quando o LLM falha em responder)
-                    elif "✅ [BUSCA LOTE] Sucesso" in content:
-                        # Extrair produto e preço: "Sucesso com 'NOME' (R$ XX.XX)"
-                        match = re.search(r"Sucesso com '([^']+)' \((R\$ [0-9.,]+)\)", content)
-                        if match:
-                            prod, preco = match.groups()
-                            tool_results.append(f"sucesso:{prod}:{preco}")
+                    if "TRANSBORDO_HUMANO" in content:
+                         tool_results.append("transbordo")
             
-            # Gerar resposta baseada nos resultados das tools
-            if any(r.startswith("sucesso:") for r in tool_results) or ("busca_lote_ok" in tool_results and precos_encontrados):
-                # Extrair itens encontrados
-                itens_ok = []
-                if precos_encontrados:
-                    itens_ok.extend(precos_encontrados)
-                for r in tool_results:
-                    if r.startswith("sucesso:"):
-                        _, prod, preco = r.split(":", 2)
-                        itens_ok.append(f"{prod} - {preco}")
-
-                # Montar resposta amigável
-                if itens_ok:
-                    linhas = ["Aqui estão os valores:"] + [f"* {ln}" for ln in itens_ok]
-                    if nao_encontrados_list:
-                        linhas.append(f"\nNão encontrei: {', '.join(nao_encontrados_list)}.")
-                    linhas.append("Quer que eu adicione ao carrinho?")
-                    output = "\n".join(linhas)
-                    logger.info(f"🔄 Fallback inteligente: gerando resposta de preços - {output}")
-                else:
-                    output = "Não consegui obter os preços agora. Pode repetir?"
-
-            elif "sem_estoque" in tool_results:
-                if produtos_encontrados:
-                    # Oferecer alternativas da lista de produtos encontrados
-                    alternativas = ", ".join(produtos_encontrados[:2])
-                    output = f"Não temos esse produto disponível. Temos: {alternativas}. Quer algum desses?"
-                    logger.info(f"🔄 Fallback inteligente: oferecendo alternativas - {alternativas}")
-                else:
-                    output = "Não temos esse produto disponível no momento. Quer outro?"
-                    logger.info("🔄 Fallback inteligente: produto sem estoque, sem alternativas")
-            elif "nao_encontrado" in tool_results:
-                output = "Não achei esse produto. Pode descrever de outra forma?"
-                logger.info("🔄 Fallback inteligente: produto não encontrado")
+            if "transbordo" in tool_results:
+                output = "Transferindo para um especialista..."
             else:
                 output = "Desculpe, não consegui processar sua solicitação. Pode repetir?"
                 logger.warning("⚠️ Resposta vazia do LLM, usando fallback genérico")

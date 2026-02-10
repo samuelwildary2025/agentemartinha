@@ -39,7 +39,7 @@ from tools.redis_tools import (
 
 logger = setup_logger(__name__)
 
-app = FastAPI(title="Agente de Supermercado", version="1.6.0") # FORCE UPDATE CHECK
+app = FastAPI(title="Agente de Varejo", version="1.6.0") # FORCE UPDATE CHECK
 
 # --- Models ---
 class WhatsAppMessage(BaseModel):
@@ -209,6 +209,84 @@ def transcribe_audio_uaz(message_id: str) -> Optional[str]:
     except Exception as e:
         logger.error(f"Erro transcrição Gemini: {e}")
         return None
+
+def analyze_image_uaz(message_id: Optional[str], url: Optional[str]) -> Optional[str]:
+    if not settings.google_api_key:
+        return None
+
+    file_path = None
+    try:
+        from google import genai
+        import tempfile
+        import os as os_module
+        import base64
+
+        mime_type_clean = None
+        image_bytes = None
+
+        if message_id:
+            media_data = whatsapp.get_media_base64(message_id)
+            if media_data and media_data.get("base64"):
+                image_bytes = base64.b64decode(media_data["base64"])
+                mime_type_clean = (media_data.get("mimetype") or "image/jpeg").split(";")[0].strip()
+
+        if image_bytes is None and url:
+            resp = requests.get(url, timeout=20)
+            resp.raise_for_status()
+            image_bytes = resp.content
+            mime_type_clean = (resp.headers.get("Content-Type") or "image/jpeg").split(";")[0].strip()
+
+        if not image_bytes:
+            return None
+
+        ext_map = {
+            "image/jpeg": ".jpg",
+            "image/jpg": ".jpg",
+            "image/png": ".png",
+            "image/webp": ".webp",
+        }
+        ext = ext_map.get((mime_type_clean or "").lower(), ".jpg")
+
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+            tmp.write(image_bytes)
+            file_path = tmp.name
+
+        client = genai.Client(api_key=settings.google_api_key)
+        image_file = client.files.upload(file=file_path, config={"mime_type": mime_type_clean or "image/jpeg"})
+
+        prompt = (
+            "Analise cuidadosamente esta imagem e identifique o produto (se for um produto). "
+            "Retorne um texto curto em português com: nome do produto, marca, versão/sabor/variante, "
+            "tamanho/peso/volume e qualquer detalhe útil visível. "
+            "Se não for um produto (ex.: foto borrada, pessoa, conversa), diga apenas: 'Imagem não identificada'. "
+            "Não invente detalhes; só use o que estiver visível."
+        )
+
+        model_candidates = [settings.llm_model or "gemini-2.0-flash-lite", "gemini-2.0-flash"]
+        last_err = None
+        for model in model_candidates:
+            try:
+                response = client.models.generate_content(model=model, contents=[prompt, image_file])
+                txt = (response.text or "").strip()
+                if txt:
+                    return txt[:800]
+            except Exception as e:
+                last_err = e
+
+        if last_err:
+            logger.error(f"Erro visão Gemini: {last_err}")
+        return None
+
+    except Exception as e:
+        logger.error(f"Erro ao analisar imagem: {e}")
+        return None
+    finally:
+        if file_path:
+            try:
+                import os as os_module
+                os_module.unlink(file_path)
+            except Exception:
+                pass
 
 def _extract_incoming(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -381,10 +459,14 @@ def _extract_incoming(payload: Dict[str, Any]) -> Dict[str, Any]:
     elif message_type == "image":
         caption = mensagem_texto or ""
         url = media_url or get_media_url_uaz(message_id)
-        if url: 
-            mensagem_texto = f"{caption} [MEDIA_URL: {url}]".strip()
-        else: 
-            mensagem_texto = f"{caption} [Imagem recebida]".strip()
+        analysis = analyze_image_uaz(message_id, url)
+        if analysis:
+            base = caption.strip()
+            mensagem_texto = f"{base}\n[Análise da imagem]: {analysis}".strip() if base else f"[Análise da imagem]: {analysis}"
+        else:
+            mensagem_texto = caption.strip() if caption else "[Imagem recebida]"
+        if url:
+            mensagem_texto = f"{mensagem_texto} [MEDIA_URL: {url}]".strip()
 
     elif message_type == "document":
         url = media_url or get_media_url_uaz(message_id)
@@ -518,6 +600,31 @@ def process_async(tel, msg, mid=None):
         send_presence(tel, "paused")
         presence_sessions.pop(re.sub(r"\D", "", tel), None)
 
+# --- Dashboard API ---
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from tools.analytics import get_daily_stats, get_recent_events, log_event
+
+# Mount static files (dashboard HTML/JS/CSS)
+import os
+if not os.path.exists("static"):
+    os.makedirs("static")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/dashboard")
+async def dashboard_page():
+    return FileResponse("static/dashboard.html")
+
+@app.get("/api/dashboard/stats")
+async def dashboard_stats():
+    return get_daily_stats()
+
+@app.get("/api/dashboard/events")
+async def dashboard_events():
+    return get_recent_events()
+
+
 def buffer_loop(tel):
     """
     Loop do Buffer (3 ciclos de 5s = 15 segundos)
@@ -602,6 +709,18 @@ async def webhook(req: Request, tasks: BackgroundTasks):
         
         logger.info(f"In: {tel} | {msg_type} | {txt[:50] if txt else '[Mídia]'}")
 
+        # --- BLOQUEIO DE NÚMEROS ---
+        # Verifica se o telefone está na lista negra configurada no settings.py
+        blocked_list = [n.strip() for n in (settings.blocked_numbers or "").split(",") if n.strip()]
+        
+        # Limpar números para comparação (apenas dígitos)
+        num_clean = re.sub(r"\D", "", tel)
+        blocked_clean = [re.sub(r"\D", "", n) for n in blocked_list]
+        
+        if num_clean in blocked_clean:
+            logger.info(f"🚫 Telefone bloqueado: {tel} - Ignorando mensagem.")
+            return JSONResponse(content={"status": "blocked"})
+
         if from_me:
             # Detectar Human Takeover: Se o número do agente enviou mensagem
             # Ativar cooldown para pausar a IA
@@ -616,8 +735,11 @@ async def webhook(req: Request, tasks: BackgroundTasks):
                     set_agent_cooldown(tel, ttl)
                     logger.info(f"🙋 Human Takeover ativado para {tel} - IA pausa por {ttl//60}min")
             
-            try: get_session_history(tel).add_ai_message(txt)
-            except: pass
+            # Salvar mensagem como 'atendente' (humano que assumiu)
+            try: 
+                get_session_history(tel).add_human_agent_message(txt)
+            except: 
+                pass
             return JSONResponse(content={"status":"ignored_self"})
 
         num = re.sub(r"\D","",tel)
@@ -627,6 +749,13 @@ async def webhook(req: Request, tasks: BackgroundTasks):
 
         active, _ = is_agent_in_cooldown(num)
         if active:
+            # Mesmo em cooldown, salvar mensagem do cliente na memória
+            try:
+                get_session_history(tel).add_user_message(txt)
+                logger.info(f"📝 Mensagem do cliente salva na memória (cooldown ativo)")
+            except Exception as e:
+                logger.error(f"Erro ao salvar mensagem durante cooldown: {e}")
+            
             push_message_to_buffer(num, txt)
             return JSONResponse(content={"status":"cooldown"})
 
@@ -641,6 +770,11 @@ async def webhook(req: Request, tasks: BackgroundTasks):
                 threading.Thread(target=buffer_loop, args=(num,), daemon=True).start()
         else:
             tasks.add_task(process_async, tel, txt)
+
+        # LOG ANALYTICS (Message Received)
+        try:
+            log_event(tel, "message_received", {"type": msg_type})
+        except: pass
 
         return JSONResponse(content={"status":"buffering"})
     except Exception as e:

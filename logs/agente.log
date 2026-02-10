@@ -128,3 +128,21 @@
 {"asctime": "2025-12-14 03:09:05", "name": "tools.http_tools", "levelname": "INFO", "message": "Tamanho da resposta ean_lookup: 100 caracteres", "taskName": null}
 {"asctime": "2025-12-14 03:09:05", "name": "tools.http_tools", "levelname": "INFO", "message": "Consultando estoque_preco por EAN: http://45.178.95.233:5001/api/Produto/GetProdutosEAN/7896006716112", "taskName": null}
 {"asctime": "2025-12-14 03:09:05", "name": "tools.http_tools", "levelname": "INFO", "message": "EAN 7896006716112: 1 item(s) dispon\u00edveis ap\u00f3s filtragem", "taskName": null}
+{"asctime": "2025-12-31 11:16:28", "name": "tools.whatsapp_api", "levelname": "WARNING", "message": "WHATSAPP_API_BASE_URL n\u00e3o configurado!", "taskName": null}
+{"asctime": "2025-12-31 11:27:41", "name": "tools.whatsapp_api", "levelname": "WARNING", "message": "WHATSAPP_API_BASE_URL n\u00e3o configurado!", "taskName": null}
+{"asctime": "2026-02-10 09:29:52", "name": "tools.vector_search", "levelname": "ERROR", "message": "\u274c OPENAI_API_KEY n\u00e3o configurada no .env", "taskName": null}
+{"asctime": "2026-02-10 09:35:04", "name": "tools.vector_search", "levelname": "ERROR", "message": "Erro ao gerar embedding: Client.__init__() got an unexpected keyword argument 'proxies'", "taskName": null}
+{"asctime": "2026-02-10 09:36:41", "name": "tools.vector_search", "levelname": "ERROR", "message": "Erro no Banco Vetorial: relation \"produtos\" does not exist\nLINE 4:                     FROM \"produtos\"\n                                 ^\n", "taskName": null}
+{"asctime": "2026-02-10 09:38:06", "name": "tools.vector_search", "levelname": "ERROR", "message": "Erro no Banco Vetorial: column \"embedding\" does not exist\nLINE 3:                            1 - (embedding <=> '[0.0233422778...\n                                        ^\n", "taskName": null}
+{"asctime": "2026-02-10 09:43:59", "name": "tools.vector_search", "levelname": "INFO", "message": "\ud83d\udd0d [VECTOR] Busca por 'tesoura' retornou 10 resultados.", "taskName": null}
+{"asctime": "2026-02-10 10:48:46", "name": "tools.vector_search", "levelname": "INFO", "message": "\ud83d\udd0d [VECTOR] Busca por 'tesoura' retornou 10 resultados.", "taskName": null}
+{"asctime": "2026-02-10 10:48:46", "name": "tools.vector_search", "levelname": "ERROR", "message": "Erro desconhecido busca vetorial: 'similarity'", "taskName": null}
+{"asctime": "2026-02-10 10:49:38", "name": "tools.vector_search", "levelname": "INFO", "message": "\ud83d\udd0d [VECTOR] Busca por 'tesoura' retornou 10 resultados.", "taskName": null}
+{"asctime": "2026-02-10 14:46:15", "name": "tools.vector_search", "levelname": "INFO", "message": "\ud83d\udd0d [VECTOR] Busca por 'lapis de cor' retornou 10 resultados.", "taskName": null}
+{"asctime": "2026-02-10 14:46:15", "name": "tools.vector_search", "levelname": "INFO", "message": "\ud83d\udd0d [VECTOR] Busca por 'lapis de cor' retornou 10 resultados.", "taskName": null}
+{"asctime": "2026-02-10 14:51:54", "name": "tools.whatsapp_api", "levelname": "WARNING", "message": "WHATSAPP_API_BASE_URL n\u00e3o configurado!", "taskName": null}
+{"asctime": "2026-02-10 14:51:54", "name": "tools.redis_tools", "levelname": "INFO", "message": "Conectado ao Redis: 31.97.252.6:9886", "taskName": null}
+{"asctime": "2026-02-10 14:51:54", "name": "tools.redis_tools", "levelname": "INFO", "message": "Cooldown definido para 558599999999 por 28800s", "taskName": null}
+{"asctime": "2026-02-10 14:51:54", "name": "agent_langgraph_simple", "levelname": "INFO", "message": "\u23f8\ufe0f IA Pausada para 558599999999 por 28800s (Transfer\u00eancia para Vendedor)", "taskName": null}
+{"asctime": "2026-02-10 15:10:49", "name": "tools.whatsapp_api", "levelname": "WARNING", "message": "WHATSAPP_API_BASE_URL n\u00e3o configurado!", "taskName": null}
+{"asctime": "2026-02-10 15:44:07", "name": "__main__", "levelname": "INFO", "message": "\u2705 Tabela 'analytics_events' criada/verificada com sucesso!", "taskName": null}

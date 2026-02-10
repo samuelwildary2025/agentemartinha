@@ -1,5 +1,5 @@
 """
-Ferramentas HTTP para interação com a API do Supermercado
+Ferramentas HTTP para interação com a API do varejo
 """
 import requests
 import json
@@ -94,7 +94,7 @@ def estoque(url: str) -> str:
 
 def pedidos(json_body: str) -> str:
     """
-    Envia um pedido finalizado para o painel dos funcionários (dashboard).
+    Encaminhamento de pedido para painel externo desativado.
     
     Args:
         json_body: JSON string com os detalhes do pedido
@@ -103,59 +103,19 @@ def pedidos(json_body: str) -> str:
     Returns:
         Mensagem de sucesso com resposta do servidor ou mensagem de erro
     """
-    # Remove trailing slashed from base and from endpoint to ensure correct path
-    base = settings.supermercado_base_url.rstrip("/")
-    url = f"{base}/pedidos/"  # Barra final necessária para FastAPI
-    logger.info(f"Enviando pedido para: {url}")
-    
-    # DEBUG: Log token being used (only first/last 4 chars for security)
-    token = settings.supermercado_auth_token or ""
-    token_preview = f"{token[:12]}...{token[-4:]}" if len(token) > 16 else token
-    logger.info(f"🔑 Token usado: {token_preview}")
-    
     try:
-        # Validar JSON
-        data = json.loads(json_body)
-        logger.debug(f"Dados do pedido: {data}")
-        
-        response = requests.post(
-            url,
-            headers=get_auth_headers(),
-            json=data,
-            timeout=10
-        )
-        response.raise_for_status()
-        
-        result = response.json()
-        success_msg = f"✅ Pedido enviado com sucesso!\n\nResposta do servidor:\n{json.dumps(result, indent=2, ensure_ascii=False)}"
-        logger.info("Pedido enviado com sucesso")
-        
-        return success_msg
+        json.loads(json_body)
+        return "✅ Pedido registrado. Um atendente vai dar sequência por aqui."
     
     except json.JSONDecodeError:
         error_msg = "Erro: O corpo da requisição não é um JSON válido."
-        logger.error(error_msg)
-        return error_msg
-    
-    except requests.exceptions.Timeout:
-        error_msg = "Erro: Timeout ao enviar pedido. Tente novamente."
-        logger.error(error_msg)
-        return error_msg
-    
-    except requests.exceptions.HTTPError as e:
-        error_msg = f"Erro HTTP ao enviar pedido: {e.response.status_code} - {e.response.text}"
-        logger.error(error_msg)
-        return error_msg
-    
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Erro ao enviar pedido: {str(e)}"
         logger.error(error_msg)
         return error_msg
 
 
 def alterar(telefone: str, json_body: str) -> str:
     """
-    Atualiza um pedido existente no painel dos funcionários (dashboard).
+    Alteração de pedido em painel externo desativada.
     
     Args:
         telefone: Telefone do cliente para identificar o pedido
@@ -164,30 +124,9 @@ def alterar(telefone: str, json_body: str) -> str:
     Returns:
         Mensagem de sucesso com resposta do servidor ou mensagem de erro
     """
-    # Remove caracteres não numéricos do telefone
-    telefone_limpo = "".join(filter(str.isdigit, telefone))
-    url = f"{settings.supermercado_base_url}/pedidos/telefone/{telefone_limpo}"
-    
-    logger.info(f"Atualizando pedido para telefone: {telefone_limpo}")
-    
     try:
-        # Validar JSON
-        data = json.loads(json_body)
-        logger.debug(f"Dados de atualização: {data}")
-        
-        response = requests.put(
-            url,
-            headers=get_auth_headers(),
-            json=data,
-            timeout=10
-        )
-        response.raise_for_status()
-        
-        result = response.json()
-        success_msg = f"✅ Pedido atualizado com sucesso!\n\nResposta do servidor:\n{json.dumps(result, indent=2, ensure_ascii=False)}"
-        logger.info("Pedido atualizado com sucesso")
-        
-        return success_msg
+        json.loads(json_body)
+        return "✅ Pedido atualizado internamente."
     
     except json.JSONDecodeError:
         error_msg = "Erro: O corpo da requisição não é um JSON válido."

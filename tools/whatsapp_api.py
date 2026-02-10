@@ -32,19 +32,20 @@ class WhatsAppAPI:
     def send_text(self, to: str, text: str) -> bool:
         """
         Envia mensagem de texto simples
-        POST /message/text
+        POST /send/text
         """
         if not self.base_url: return False
         
-        url = f"{self.base_url}/message/text"
+        url = f"{self.base_url}/send/text"
         payload = {
-            "to": self._clean_number(to),
+            "number": self._clean_number(to),
             "text": text
         }
         
         try:
             resp = requests.post(url, headers=self._get_headers(), json=payload, timeout=10)
             resp.raise_for_status()
+            # UAZAPI v2 usually returns { "id": "...", "status": "PENDING" }
             return True
         except Exception as e:
             logger.error(f"Erro ao enviar mensagem WhatsApp para {to}: {e}")
@@ -60,8 +61,9 @@ class WhatsAppAPI:
         
         url = f"{self.base_url}/message/presence"
         payload = {
-            "to": self._clean_number(to),
-            "presence": presence
+            "number": self._clean_number(to),
+            "presence": presence,
+            "delay": 0
         }
         
         try:
@@ -73,16 +75,16 @@ class WhatsAppAPI:
     def mark_as_read(self, chat_id: str) -> bool:
         """
         Marca a conversa como lida (Tick Azul)
-        POST /message/read
-        Body: { "chatId": "55...@c.us" }
+        POST /chat/read
+        Body: { "number": "55...@s.whatsapp.net", "read": true }
         """
         if not self.base_url or not chat_id: return False
         
         # Garante formatação JID
-        jid = chat_id if "@" in chat_id else f"{self._clean_number(chat_id)}@c.us"
+        jid = chat_id if "@" in chat_id else f"{self._clean_number(chat_id)}@s.whatsapp.net"
         
-        url = f"{self.base_url}/message/read"
-        payload = {"chatId": jid}
+        url = f"{self.base_url}/chat/read"
+        payload = {"number": jid, "read": True}
         
         try:
             resp = requests.post(url, headers=self._get_headers(), json=payload, timeout=5)
@@ -109,13 +111,11 @@ class WhatsAppAPI:
         
         try:
             resp = requests.post(url, headers=self._get_headers(), json=payload, timeout=30)
-            logger.info(f"🌐 DEBUG API RESPONSE: Status={resp.status_code}") # Timeout maior para download
+            logger.info(f"🌐 DEBUG API RESPONSE: Status={resp.status_code}") 
             if resp.status_code == 200:
                 data = resp.json()
-                # A API retorna { success: true, data: { base64: "...", mimetype: "..." } }
                 if data.get("success") and "data" in data:
                     return data["data"]
-                # Ou pode retornar direto no root se a versão for diferente
                 if "base64" in data:
                     return data
             else:
@@ -124,6 +124,80 @@ class WhatsAppAPI:
             logger.error(f"Erro ao obter mídia WhatsApp ({message_id}): {e}")
             
         return None
+
+    def get_labels(self) -> list:
+        """
+        Lista todas as etiquetas disponíveis
+        GET /labels
+        """
+        if not self.base_url: return []
+        
+        url = f"{self.base_url}/labels"
+        
+        try:
+            resp = requests.get(url, headers=self._get_headers(), timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                # Pode retornar como { data: [...] } ou direto [...]
+                if isinstance(data, list):
+                    return data
+                return data.get("data", data.get("labels", []))
+        except Exception as e:
+            logger.error(f"Erro ao listar etiquetas: {e}")
+        return []
+
+    def add_label_to_chat(self, chat_id: str, label_id: str) -> bool:
+        """
+        Adiciona uma etiqueta a um chat
+        POST /chat/labels
+        Body: { "number": "55...@s.whatsapp.net", "add_labelid": "72" }
+        """
+        if not self.base_url or not chat_id or not label_id: return False
+        
+        # Garante formatação JID (s.whatsapp.net para users)
+        jid = chat_id if "@" in chat_id else f"{self._clean_number(chat_id)}@s.whatsapp.net"
+        
+        url = f"{self.base_url}/chat/labels"
+        payload = {
+            "number": jid,
+            "add_labelid": str(label_id)
+        }
+        
+        try:
+            resp = requests.post(url, headers=self._get_headers(), json=payload, timeout=10)
+            if resp.status_code == 200:
+                logger.info(f"🏷️ Etiqueta {label_id} adicionada ao chat {chat_id}")
+                return True
+            else:
+                logger.warning(f"⚠️ Erro ao adicionar etiqueta ({resp.status_code}): {resp.text[:200]}")
+        except Exception as e:
+            logger.error(f"Erro ao adicionar etiqueta ao chat: {e}")
+        return False
+
+    def remove_label_from_chat(self, chat_id: str, label_id: str) -> bool:
+        """
+        Remove uma etiqueta de um chat
+        POST /chat/labels
+        Body: { "number": "55...@s.whatsapp.net", "remove_labelid": "72" }
+        """
+        if not self.base_url or not chat_id or not label_id: return False
+        
+        jid = chat_id if "@" in chat_id else f"{self._clean_number(chat_id)}@s.whatsapp.net"
+        
+        url = f"{self.base_url}/chat/labels"
+        payload = {
+            "number": jid,
+            "remove_labelid": str(label_id)
+        }
+        
+        try:
+            resp = requests.post(url, headers=self._get_headers(), json=payload, timeout=10)
+            if resp.status_code == 200:
+                logger.info(f"🏷️ Etiqueta {label_id} removida do chat {chat_id}")
+                return True
+        except Exception as e:
+            logger.error(f"Erro ao remover etiqueta: {e}")
+        return False
 
 # Instância global
 whatsapp = WhatsAppAPI()

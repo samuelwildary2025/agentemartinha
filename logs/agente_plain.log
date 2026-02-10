@@ -128,3 +128,27 @@
 2025-12-14 03:09:05 - tools.http_tools - INFO - Tamanho da resposta ean_lookup: 100 caracteres
 2025-12-14 03:09:05 - tools.http_tools - INFO - Consultando estoque_preco por EAN: http://45.178.95.233:5001/api/Produto/GetProdutosEAN/7896006716112
 2025-12-14 03:09:05 - tools.http_tools - INFO - EAN 7896006716112: 1 item(s) disponíveis após filtragem
+2025-12-31 11:16:28 - tools.whatsapp_api - WARNING - WHATSAPP_API_BASE_URL não configurado!
+2025-12-31 11:27:41 - tools.whatsapp_api - WARNING - WHATSAPP_API_BASE_URL não configurado!
+2026-02-10 09:29:52 - tools.vector_search - ERROR - ❌ OPENAI_API_KEY não configurada no .env
+2026-02-10 09:35:04 - tools.vector_search - ERROR - Erro ao gerar embedding: Client.__init__() got an unexpected keyword argument 'proxies'
+2026-02-10 09:36:41 - tools.vector_search - ERROR - Erro no Banco Vetorial: relation "produtos" does not exist
+LINE 4:                     FROM "produtos"
+                                 ^
+
+2026-02-10 09:38:06 - tools.vector_search - ERROR - Erro no Banco Vetorial: column "embedding" does not exist
+LINE 3:                            1 - (embedding <=> '[0.0233422778...
+                                        ^
+
+2026-02-10 09:43:59 - tools.vector_search - INFO - 🔍 [VECTOR] Busca por 'tesoura' retornou 10 resultados.
+2026-02-10 10:48:46 - tools.vector_search - INFO - 🔍 [VECTOR] Busca por 'tesoura' retornou 10 resultados.
+2026-02-10 10:48:46 - tools.vector_search - ERROR - Erro desconhecido busca vetorial: 'similarity'
+2026-02-10 10:49:38 - tools.vector_search - INFO - 🔍 [VECTOR] Busca por 'tesoura' retornou 10 resultados.
+2026-02-10 14:46:15 - tools.vector_search - INFO - 🔍 [VECTOR] Busca por 'lapis de cor' retornou 10 resultados.
+2026-02-10 14:46:15 - tools.vector_search - INFO - 🔍 [VECTOR] Busca por 'lapis de cor' retornou 10 resultados.
+2026-02-10 14:51:54 - tools.whatsapp_api - WARNING - WHATSAPP_API_BASE_URL não configurado!
+2026-02-10 14:51:54 - tools.redis_tools - INFO - Conectado ao Redis: 31.97.252.6:9886
+2026-02-10 14:51:54 - tools.redis_tools - INFO - Cooldown definido para 558599999999 por 28800s
+2026-02-10 14:51:54 - agent_langgraph_simple - INFO - ⏸️ IA Pausada para 558599999999 por 28800s (Transferência para Vendedor)
+2026-02-10 15:10:49 - tools.whatsapp_api - WARNING - WHATSAPP_API_BASE_URL não configurado!
+2026-02-10 15:44:07 - __main__ - INFO - ✅ Tabela 'analytics_events' criada/verificada com sucesso!

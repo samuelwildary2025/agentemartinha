@@ -1,1 +1,26 @@
+
+# Environment
 .env
+.env.*
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+
+# Logs
+logs/
+*.log
+
+# Databases
+*.sqlite
+*.db
+
+# Tests
+tests/
+.pytest_cache/

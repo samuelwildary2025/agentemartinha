@@ -24,38 +24,38 @@ class Settings(BaseSettings):
     moonshot_api_key: Optional[str] = None
     moonshot_api_url: str = "https://api.moonshot.ai/anthropic"
     
-    # Postgres
-    postgres_connection_string: str
+    # Postgres (Memória + Produtos - Mesmo banco)
+    postgres_connection_string: str = "postgres://postgres:85885885@31.97.252.6:6087/festinfan-bd-produtos?sslmode=disable"
     postgres_table_name: str = "memoria"
-    postgres_products_table_name: str = "produtos-sp-queiroz"  # Nova variável para tabela de produtos
+    postgres_products_table_name: str = "produtos"
     postgres_message_limit: int = 8
     
     # Banco de Produtos (Postgres)
     # Se for o mesmo banco, pode usar a mesma connection string
-    products_db_connection_string: Optional[str] = "postgres://samuelwildary:85885885@31.97.252.6:3043/db-agente?sslmode=disable"
+    products_db_connection_string: Optional[str] = "postgres://postgres:85885885@31.97.252.6:6087/festinfan-bd-produtos?sslmode=disable"
     
-    # Redis
-    redis_host: str = "localhost"
-    redis_port: int = 6379
-    redis_password: Optional[str] = None
+    # Redis (Buffer de mensagens + Cooldown)
+    redis_host: str = "31.97.252.6"
+    redis_port: int = 9886
+    redis_password: Optional[str] = "85885885"
     redis_db: int = 0
     
     # API do Supermercado
-    supermercado_base_url: str
-    supermercado_auth_token: str
+    supermercado_base_url: str = ""
+    supermercado_auth_token: str = ""
 
     # Consulta de EAN (estoque/preço)
-    estoque_ean_base_url: str = "http://45.178.95.233:5001/api/Produto/GetProdutosEAN"
+    estoque_ean_base_url: str = ""
 
     # EAN Smart Responder (Supabase Functions)
-    smart_responder_url: str = "https://gmhpegzldsuibmmvqbxs.supabase.co/functions/v1/smart-responder"
-    smart_responder_token: str = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtaHBlZ3psZHN1aWJtbXZxYnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4NDE4MzQsImV4cCI6MjA3ODQxNzgzNH0.1V-CGTIw89BgMe0nc83aGNi7NwnI6gYD4kCx6IW0U70"
+    smart_responder_url: Optional[str] = None
+    smart_responder_token: Optional[str] = None
     smart_responder_auth: str = ""
     smart_responder_apikey: str = ""
     pre_resolver_enabled: bool = False
     
     # WhatsApp API (Nova Integração)
-    whatsapp_api_base_url: str = "https://sistema-whatsapp-api.5mos1l.easypanel.host"
+    whatsapp_api_base_url: Optional[str] = None
     whatsapp_instance_token: Optional[str] = None  # Header: X-Instance-Token
     
     # WhatsApp / UAZ API (Legado/Compatibilidade)
@@ -63,11 +63,20 @@ class Settings(BaseSettings):
     uaz_api_url: Optional[str] = None
     whatsapp_token: Optional[str] = None
     whatsapp_method: str = "POST"
-    whatsapp_agent_number: str | None = None
+    whatsapp_agent_number: Optional[str] = None
     
     # Human Takeover - Tempo de pausa quando atendente humano assume (em segundos)
-    human_takeover_ttl: int = 900  # 15 minutos padrão
+    # 8 horas = 28800 segundos
+    human_takeover_ttl: int = 28800 
     
+    # ID da etiqueta "Novo Pedido" no WhatsApp (usar GET /labels para descobrir)
+    # Esta etiqueta é adicionada ao chat quando o agente transfere para o atendente
+    novo_pedido_label_id: Optional[str] = "558591836205:2" 
+    
+    # Lista Negra de Telefones (Ignorar)
+    # Formato: "558599999999,558588888888" (separado por vírgula)
+    blocked_numbers: str = "558594147403,558587781140,558596535100,558596535300,558597054444,558597621595,558588664068,5585985296922,5585996275067,558589823370"
+
     # Servidor
     server_host: str = "0.0.0.0"
     server_port: int = 8000
@@ -77,7 +86,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_file: str = "logs/agente.log"
     
-    agent_prompt_path: str | None = "prompts/agent_system_optimized.md"
+    agent_prompt_path: Optional[str] = "prompts/agent_system_optimized.md"
 
 
 # Instância global de configurações
