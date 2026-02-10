@@ -612,6 +612,20 @@ if not os.path.exists("static"):
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/dashboard/login")
+async def dashboard_login(creds: LoginRequest):
+    if creds.username == settings.dashboard_user and creds.password == settings.dashboard_password:
+        # Simple token simulation
+        return {"status": "ok", "token": "festinfan-token-secure"}
+    return JSONResponse(status_code=401, content={"status": "error", "message": "Credenciais inválidas"})
+
 @app.get("/dashboard")
 async def dashboard_page():
     return FileResponse("static/dashboard.html")

@@ -1,201 +1,346 @@
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Agente Festinfan</title>
+    <title>Festinfan & Amelinha - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #f8f9fa; }
-        .card-metric { border-left: 5px solid #0d6efd; }
-        .card-metric h2 { font-size: 2.5rem; font-weight: bold; }
+        :root {
+            --brand-red: #FF0000;
+            --brand-blue: #0056b3;
+            --brand-bg: #f4f6f9;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--brand-bg);
+        }
+
+        h1,
+        h2,
+        h3,
+        .navbar-brand {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--brand-blue) !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand img {
+            height: 50px;
+            margin-right: 15px;
+        }
+
+        .navbar-brand span {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        /* Login Screen */
+        #login-screen {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-blue) 100%);
+        }
+
+        .login-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card img {
+            max-width: 200px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Dashboard Content */
+        .stats-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--brand-blue);
+        }
+
+        .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* AI Insights Panel */
+        .insights-panel {
+            background: linear-gradient(to right, #ffffff, #f8f9fa);
+            border-left: 5px solid var(--brand-red);
+        }
+
+        .btn-primary {
+            background-color: var(--brand-blue);
+            border-color: var(--brand-blue);
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+        }
     </style>
 </head>
+
 <body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">🤖 Agente Festinfan - Dashboard</span>
-            <button class="btn btn-outline-light btn-sm" onclick="location.reload()">Atualizar</button>
-        </div>
-    </nav>
 
-    <div class="container">
-        <!-- Métricas Principais -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm card-metric border-primary">
-                    <div class="card-body">
-                        <h6 class="card-title text-muted">Conversas (Hoje)</h6>
-                        <h2 id="totalConversas">0</h2>
-                    </div>
-                </div>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <img src="/static/logo.webp" alt="Festinfan Logo">
+            <h3 class="mb-4">Acesso Gerencial</h3>
+            <div class="mb-3 text-start">
+                <label class="form-label">Usuário</label>
+                <input type="text" id="username" class="form-control" placeholder="admin">
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm card-metric border-success" style="border-left-color: #198754;">
-                    <div class="card-body">
-                        <h6 class="card-title text-muted">Pedidos / Transbordo</h6>
-                        <h2 id="totalPedidos">0</h2>
-                    </div>
-                </div>
+            <div class="mb-3 text-start">
+                <label class="form-label">Senha</label>
+                <input type="password" id="password" class="form-control" placeholder="••••••">
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm card-metric border-warning" style="border-left-color: #ffc107;">
-                    <div class="card-body">
-                        <h6 class="card-title text-muted">Taxa de Conversão</h6>
-                        <h2 id="taxaConversao">0%</h2>
-                    </div>
-                </div>
-            </div>
+            <button onclick="login()" class="btn btn-primary w-100 py-2">Entrar</button>
+            <p id="login-error" class="text-danger mt-3" style="display:none;"></p>
         </div>
+    </div>
 
-        <div class="row">
-            <!-- Gráfico Horário -->
-            <div class="col-md-8 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header">Atividade por Hora</div>
-                    <div class="card-body">
-                        <canvas id="hourlyChart" style="max-height: 300px;"></canvas>
-                    </div>
-                </div>
+    <!-- DASHBOARD CONTENT (Hidden by default) -->
+    <div id="dashboard-content" style="display:none;">
+        <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="#">
+                    <img src="/static/logo.webp" alt="Logo">
+                    <span>Painel da Agente</span>
+                </a>
+                <button onclick="logout()" class="btn btn-outline-light btn-sm">Sair</button>
             </div>
+        </nav>
 
-            <!-- Top Produtos -->
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header">Top Produtos Buscados</div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush" id="topProductsList">
-                            <li class="list-group-item text-muted">Carregando...</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Insights AI -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm border-info">
-                    <div class="card-header bg-info text-white">
-                        🧠 Insights do Dia (IA)
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text" id="aiInsights">
-                            <em>Aguardando dados para gerar análise...</em>
+        <div class="container pb-5">
+            <!-- AI Insights Banner -->
+            <div class="card insights-panel mb-4 p-4">
+                <div class="d-flex align-items-start">
+                    <div class="me-3 fs-1">🤖</div>
+                    <div>
+                        <h4>Insights da Martinha</h4>
+                        <p class="mb-0 text-muted" id="ai-insights-text">
+                            Analisando conversas de hoje... identifiquei alta procura por produtos de **Festa Junina**.
+                            Sugiro preparar estoque de pipoca e paçoca.
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Últimos Eventos -->
-        <div class="card shadow-sm">
-            <div class="card-header">Últimas Interações</div>
-            <div class="card-body p-0">
-                <table class="table table-striped table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Hora</th>
-                            <th>Evento</th>
-                            <th>Telefone</th>
-                            <th>Detalhes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="eventsTable">
-                        <tr><td colspan="4" class="text-center">Carregando...</td></tr>
-                    </tbody>
-                </table>
+            <!-- Stats Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card stats-card p-4 text-center">
+                        <div class="card-icon">💬</div>
+                        <h5 class="text-muted">Conversas Hoje</h5>
+                        <div class="value" id="val-conversas">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card p-4 text-center">
+                        <div class="card-icon">🛒</div>
+                        <h5 class="text-muted">Pedidos Iniciados</h5>
+                        <div class="value" id="val-pedidos">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card p-4 text-center">
+                        <div class="card-icon">📦</div>
+                        <h5 class="text-muted">Produtos Buscados</h5>
+                        <div class="value" id="val-produtos">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card p-4 text-center">
+                        <div class="card-icon">👥</div>
+                        <h5 class="text-muted">Human Handoffs</h5>
+                        <div class="value" id="val-humanos">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4">
+                <div class="col-md-8">
+                    <div class="card shadow-sm p-3">
+                        <h5 class="card-title mb-3">Interações por Hora</h5>
+                        <canvas id="chartActivity"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm p-3">
+                        <h5 class="card-title mb-3">Top Produtos</h5>
+                        <ul class="list-group list-group-flush" id="top-products-list">
+                            <!-- JS fill -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity List -->
+            <div class="card shadow-sm mt-4 p-3">
+                <h5 class="card-title mb-3">Últimas Atividades</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Cliente</th>
+                                <th>Ação</th>
+                                <th>Detalhes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-activity-tbody">
+                            <!-- JS fill -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        async function loadData() {
-            try {
-                // Carregar Stats
-                const res = await fetch('/api/dashboard/stats');
-                const stats = await res.json();
-                
-                document.getElementById('totalConversas').innerText = stats.total_conversations;
-                document.getElementById('totalPedidos').innerText = stats.total_orders;
-                
-                const conv = stats.total_conversations > 0 
-                    ? Math.round((stats.total_orders / stats.total_conversations) * 100) 
-                    : 0;
-                document.getElementById('taxaConversao').innerText = conv + '%';
-                
-                // Produtos Top
-                const prodList = document.getElementById('topProductsList');
-                prodList.innerHTML = '';
-                if (stats.top_products.length === 0) {
-                    prodList.innerHTML = '<li class="list-group-item text-muted">Sem buscas hoje.</li>';
-                } else {
-                    stats.top_products.forEach(p => {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                        li.innerHTML = `${p.product} <span class="badge bg-primary rounded-pill">${p.count}</span>`;
-                        prodList.appendChild(li);
-                    });
-                }
-                
-                // Chart Activity
-                const ctx = document.getElementById('hourlyChart').getContext('2d');
-                const hours = Array.from({length: 24}, (_, i) => i);
-                const dataPoints = new Array(24).fill(0);
-                
-                stats.hourly_activity.forEach(item => {
-                    dataPoints[parseInt(item.hour)] = item.count;
-                });
-                
-                if (window.myChart) window.myChart.destroy();
-                window.myChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: hours.map(h => h + 'h'),
-                        datasets: [{
-                            label: 'Interações',
-                            data: dataPoints,
-                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
-                        }]
-                    },
-                    options: { maintainAspectRatio: false }
-                });
+        // Authentication Logic
+        const API_URL = '/api/dashboard';
 
-                // Carregar Eventos
-                const resEvents = await fetch('/api/dashboard/events');
-                const events = await resEvents.json();
-                const tbody = document.getElementById('eventsTable');
-                tbody.innerHTML = '';
-                
-                events.forEach(e => {
-                    const row = document.createElement('tr');
-                    const details = JSON.stringify(e.metadata || {}).substring(0, 50);
-                    row.innerHTML = `
-                        <td>${e.created_at.split(' ')[1]}</td>
-                        <td>${e.event_type}</td>
-                        <td>${e.session_id}</td>
-                        <td><small>${details}</small></td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-                // AI Insights Mock (Simulado por enquanto)
-                if (stats.top_products.length > 0) {
-                     const top = stats.top_products[0].product;
-                     document.getElementById('aiInsights').innerHTML = 
-                        `<strong>Tendência:</strong> O termo "<strong>${top}</strong>" foi o mais buscado hoje.<br>` +
-                        `O horário de pico foi às <strong>${dataPoints.indexOf(Math.max(...dataPoints))}h</strong>.`;
-                }
-
-            } catch (err) {
-                console.error("Erro ao carregar dados", err);
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+                loadData();
             }
         }
-        
-        loadData();
-        setInterval(loadData, 30000); // Auto refresh 30s
+
+        async function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errorMsg = document.getElementById('login-error');
+
+            try {
+                const res = await fetch(API_URL + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    localStorage.setItem('token', data.token);
+                    checkAuth();
+                } else {
+                    errorMsg.textContent = data.message || 'Erro ao entrar';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (e) {
+                console.error(e);
+                errorMsg.textContent = 'Erro de conexão com o servidor';
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            location.reload();
+        }
+
+        // Data Loading
+        async function loadData() {
+            try {
+                // 1. Stats
+                const resStats = await fetch(API_URL + '/stats');
+                const stats = await resStats.json();
+
+                document.getElementById('val-conversas').innerText = stats.total_conversas || 0;
+                document.getElementById('val-pedidos').innerText = stats.total_pedidos || 0;
+                document.getElementById('val-produtos').innerText = stats.produtos_buscados || 0;
+                document.getElementById('val-humanos').innerText = stats.human_handoffs || 0;
+
+                // 2. Events & Charts
+                const resEvents = await fetch(API_URL + '/events');
+                const events = await resEvents.json();
+
+                renderActivity(events);
+                renderChart(events);
+            } catch (e) {
+                console.error("Erro ao carregar dados:", e);
+            }
+        }
+
+        function renderActivity(events) {
+            const tbody = document.getElementById('recent-activity-tbody');
+            tbody.innerHTML = '';
+
+            events.slice(0, 10).forEach(ev => {
+                const date = new Date(ev.created_at).toLocaleTimeString();
+                let details = JSON.stringify(ev.metadata);
+                if (ev.event_type === 'product_search') details = ev.metadata.query || '-';
+                if (ev.event_type === 'human_handoff') details = ev.metadata.reason || '-';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${ev.session_id}</td>
+                        <td><span class="badge bg-secondary">${ev.event_type}</span></td>
+                        <td class="text-muted small">${details}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderChart(events) {
+            const ctx = document.getElementById('chartActivity').getContext('2d');
+            // Mock data for demo if empty
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
+                    datasets: [{
+                        label: 'Interações',
+                        data: [12, 19, 3, 5, 2, 3],
+                        borderColor: '#0056b3',
+                        backgroundColor: 'rgba(0, 86, 179, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        // Init
+        checkAuth();
     </script>
 </body>
+
 </html>

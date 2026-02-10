@@ -88,6 +88,10 @@ class Settings(BaseSettings):
     
     agent_prompt_path: Optional[str] = "prompts/agent_system_optimized.md"
 
+    # Dashboard Auth
+    dashboard_user: str = "admin"
+    dashboard_password: str = "123456"
+
 
 # Instância global de configurações
 settings = Settings()
