@@ -59,7 +59,7 @@ class LimitedPostgresChatMessageHistory(BaseChatMessageHistory):
         
         Args:
             message: A mensagem a ser salva
-            sender: Quem enviou a mensagem ('cliente', 'ia', 'atendente')
+            sender: Quem enviou a mensagem (info only, não salva no DB)
         """
         conn = None
         try:
@@ -71,13 +71,13 @@ class LimitedPostgresChatMessageHistory(BaseChatMessageHistory):
             conn = psycopg2.connect(self.connection_string)
             cursor = conn.cursor()
             
-            # Query de inserção com sender
+            # Query de inserção (schema padrão LangChain: session_id, message)
             query = f"""
-                INSERT INTO {self.table_name} (session_id, message, sender)
-                VALUES (%s, %s, %s)
+                INSERT INTO {self.table_name} (session_id, message)
+                VALUES (%s, %s)
             """
             
-            cursor.execute(query, (self.session_id, msg_json, sender))
+            cursor.execute(query, (self.session_id, msg_json))
             conn.commit() # <--- O PULO DO GATO: Commit explícito
             
             logger.info(f"📝 Mensagem [{sender}] persistida no DB para {self.session_id}")
