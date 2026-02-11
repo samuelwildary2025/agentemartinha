@@ -305,6 +305,9 @@ def _extract_incoming(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     # ADAPTAÇÃO: Se o payload tiver uma chave 'message' (payload aninhado extra)
     # Ex: { "event": "message", "data": { "instanceId": "...", "message": { ... } } }
+    # IMPORTANTE: Salvar 'chat' ANTES de promover 'message', senão perdemos o telefone
+    original_chat = payload.get("chat") or {}
+    
     if "message" in payload and isinstance(payload["message"], dict):
         # PROMOÇÃO DIRETA: Se existe 'message', usamos ela como payload principal
         payload = payload["message"]
@@ -335,7 +338,8 @@ def _extract_incoming(payload: Dict[str, Any]) -> Dict[str, Any]:
             
         return num
 
-    chat = payload.get("chat") or {}
+    # Usar o chat original (salvo antes da promoção) + o chat atual
+    chat = payload.get("chat") or original_chat
     message_any = payload.get("message") or {}
     
     if isinstance(payload.get("messages"), list):
@@ -351,17 +355,21 @@ def _extract_incoming(payload: Dict[str, Any]) -> Dict[str, Any]:
     # Ordem de prioridade para encontrar o número real
     candidates = []
     
-    # 1. Sender/ChatID (Geralmente o mais preciso: 5585...@s.whatsapp.net)
+    # 1. ChatID do payload promovido (UAZAPI coloca chatid no message)
+    candidates.append(payload.get("chatid"))
+    
+    # 2. Sender/ChatID do message_any
     if isinstance(message_any, dict):
         candidates.append(message_any.get("sender"))
         candidates.append(message_any.get("chatid"))
     
-    # 2. Objeto Chat
+    # 3. Objeto Chat (original, preservado antes da promoção)
+    candidates.append(chat.get("wa_chatid"))
     candidates.append(chat.get("id"))
     candidates.append(chat.get("wa_id"))
     candidates.append(chat.get("phone"))
     
-    # 3. Payload Raiz (Menos confiável)
+    # 4. Payload Raiz (Menos confiável)
     candidates.append(payload.get("from"))
     candidates.append(payload.get("sender"))
 
