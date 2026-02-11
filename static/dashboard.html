@@ -180,7 +180,7 @@
         /* KPI Cards (Smaller) */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -457,24 +457,11 @@
                             </div>
                         </div>
                         <div>
-                            <div class="kpi-value">~2s</div>
+                            <div class="kpi-value" id="kpi-response-time">--</div>
                             <div class="kpi-trend">tempo médio</div>
                         </div>
                     </div>
 
-                    <div class="card-base kpi-card">
-                        <div class="kpi-header">
-                            <span
-                                style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Satisfação</span>
-                            <div class="kpi-icon" style="background: rgba(255, 59, 48, 0.1); color: var(--danger);">
-                                <span class="material-symbols-rounded">favorite</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="kpi-value">4.9</div>
-                            <div class="kpi-trend">média avaliações</div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Insight da IA -->
@@ -658,8 +645,16 @@
                 const resStats = await fetch(API_BASE + '/stats');
                 const stats = await resStats.json();
 
-                document.getElementById('kpi-conversas').innerText = stats.total_conversas || 0;
-                document.getElementById('kpi-pedidos').innerText = stats.total_pedidos || 0;
+                document.getElementById('kpi-conversas').innerText = stats.total_conversas || stats.total_conversations || 0;
+                document.getElementById('kpi-pedidos').innerText = stats.total_pedidos || stats.total_orders || 0;
+
+                // Taxa de Resposta (tempo médio real)
+                const avgTime = stats.avg_response_time;
+                if (avgTime !== null && avgTime !== undefined) {
+                    document.getElementById('kpi-response-time').innerText = `~${avgTime}s`;
+                } else {
+                    document.getElementById('kpi-response-time').innerText = '--';
+                }
 
                 const topList = document.getElementById('top-products-list');
                 if (stats.top_produtos && stats.top_produtos.length > 0) {

@@ -582,9 +582,17 @@ def process_async(tel, msg, mid=None):
         # 3. Começar a "Digitar"
         send_presence(num, "composing")
         
-        # 4. Processamento IA
+        # 4. Processamento IA (+ medir tempo de resposta)
+        import time as _time
+        t_start = _time.time()
         res = run_agent(tel, msg)
         txt = res.get("output", "Erro ao processar.")
+        t_elapsed = round(_time.time() - t_start, 2)
+        
+        # Log do tempo de resposta para analytics
+        try:
+            log_event(tel, "response_time", {"seconds": t_elapsed})
+        except: pass
         
         # 5. Parar "Digitar"
         send_presence(num, "paused")

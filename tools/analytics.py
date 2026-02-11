@@ -42,6 +42,7 @@ def get_daily_stats():
     stats = {
         "total_conversations": 0,
         "total_orders": 0,
+        "avg_response_time": None,
         "top_products": [],
         "hourly_activity": []
     }
@@ -68,8 +69,17 @@ def get_daily_stats():
         """)
         stats["total_orders"] = cur.fetchone()['total']
         
-        # 3. Top Produtos (Baseado em 'product_search' metadata)
-        # Prioriza 'found_product' (o que achou no banco), fallback para 'query' (o que digitou)
+        # 3. Tempo Médio de Resposta (segundos)
+        cur.execute("""
+            SELECT AVG((metadata->>'seconds')::float) as avg_time
+            FROM analytics_events
+            WHERE event_type = 'response_time' AND created_at >= CURRENT_DATE
+        """)
+        row = cur.fetchone()
+        if row and row['avg_time']:
+            stats["avg_response_time"] = round(row['avg_time'], 1)
+        
+        # 4. Top Produtos (Baseado em 'product_search' metadata)
         cur.execute("""
             SELECT COALESCE(metadata->>'found_product', metadata->>'query') as product, COUNT(*) as count
             FROM analytics_events
@@ -80,7 +90,7 @@ def get_daily_stats():
         """)
         stats["top_products"] = cur.fetchall()
         
-        # 4. Atividade por Hora
+        # 5. Atividade por Hora
         cur.execute("""
             SELECT EXTRACT(HOUR FROM created_at) as hour, COUNT(*) as count
             FROM analytics_events
