@@ -19,7 +19,8 @@ def get_embedding(text: str) -> list:
             
         embeddings = OpenAIEmbeddings(
             model="text-embedding-3-small",
-            openai_api_key=settings.openai_api_key
+            openai_api_key=settings.openai_api_key,
+            openai_api_base="https://api.openai.com/v1"  # Forçar OpenAI mesmo se ENV estiver apontando para xAI
         )
         return embeddings.embed_query(text)
     except Exception as e:
