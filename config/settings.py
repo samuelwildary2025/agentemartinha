@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     google_api_key: Optional[str] = None
     llm_model: str = "gemini-2.0-flash-lite"
-    llm_temperature: float = 0.0
+    llm_temperature: float = 0.3
     llm_provider: str = "google"
     moonshot_api_key: Optional[str] = None
     moonshot_api_url: str = "https://api.moonshot.ai/anthropic"
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     postgres_connection_string: str = "postgres://postgres:85885885@31.97.252.6:6087/festinfan-bd-produtos?sslmode=disable"
     postgres_table_name: str = "memoria"
     postgres_products_table_name: str = "documents"
-    postgres_message_limit: int = 8
+    postgres_message_limit: int = 20
     
     # Banco de Produtos (Postgres)
     # Se for o mesmo banco, pode usar a mesma connection string

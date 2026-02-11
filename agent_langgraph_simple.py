@@ -11,7 +11,7 @@ from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AI
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_community.callbacks import get_openai_callback
+# (get_openai_callback removido - não funciona com Gemini)
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition, create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
@@ -21,7 +21,7 @@ import os
 
 from config.settings import settings
 from config.logger import setup_logger
-from tools.db_search import conhecimento
+# db_search.conhecimento substituído por vector_search.conhecimento_vetorial
 from tools.time_tool import get_current_time
 from memory.limited_postgres_memory import LimitedPostgresChatMessageHistory
 
@@ -209,28 +209,7 @@ def run_agent_langgraph(telefone: str, mensagem: str) -> Dict[str, Any]:
         
         logger.info("Executando agente...")
         
-        # Contador de tokens (nota: get_openai_callback pode não funcionar 100% com Gemini)
-        with get_openai_callback() as cb:
-            result = agent.invoke(initial_state, config)
-            
-            # Cálculo de custo baseado no provider
-            provider = getattr(settings, "llm_provider", "google")
-            if provider == "google":
-                # Gemini 2.5 Flash-Lite pricing (atualizado 12/2024)
-                # Input: $0.10 per 1M tokens | Output: $0.40 per 1M tokens
-                input_cost = (cb.prompt_tokens / 1_000_000) * 0.10
-                output_cost = (cb.completion_tokens / 1_000_000) * 0.40
-            else:
-                # OpenAI gpt-4o-mini pricing
-                # Input: $0.15 per 1M tokens | Output: $0.60 per 1M tokens
-                input_cost = (cb.prompt_tokens / 1_000_000) * 0.15
-                output_cost = (cb.completion_tokens / 1_000_000) * 0.60
-            
-            total_cost = input_cost + output_cost
-            
-            # Log de tokens
-            logger.info(f"📊 TOKENS - Prompt: {cb.prompt_tokens} | Completion: {cb.completion_tokens} | Total: {cb.total_tokens}")
-            logger.info(f"💰 CUSTO: ${total_cost:.6f} USD (Input: ${input_cost:.6f} | Output: ${output_cost:.6f})")
+        result = agent.invoke(initial_state, config)
         
         # 4. Extrair resposta (com fallback para Gemini empty responses)
         output = ""
