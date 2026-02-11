@@ -31,10 +31,6 @@ from tools.redis_tools import (
     pop_all_messages,
     set_agent_cooldown,
     is_agent_in_cooldown,
-    get_order_session,
-    start_order_session,
-    refresh_session_ttl,
-    get_order_context,
 )
 
 logger = setup_logger(__name__)
@@ -707,10 +703,7 @@ def buffer_loop(tel):
             if not final:
                 break
                 
-            # Obter contexto de sessão
-            order_ctx = get_order_context(n)
-            if order_ctx:
-                final = f"{order_ctx}\n\n{final}"
+
             
             # Processar (enquanto isso, novas mensagens podem chegar)
             # Passa o last_mid para marcar como lido
