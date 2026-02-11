@@ -90,6 +90,7 @@ def search_products_vector(query: str, telefone_cliente: str = "") -> str:
                         filtered.append(r)
                 
                 # LOG ANALYTICS (Deferred to capture result)
+                # LOG ANALYTICS
                 try:
                     from tools.analytics import log_event
                     if telefone_cliente:
@@ -112,6 +113,7 @@ def search_products_vector(query: str, telefone_cliente: str = "") -> str:
                                 meta["found_product"] = str(p_name)[:100] # Limit length
                         
                         log_event(tel, "product_search", meta)
+                        logger.info(f"📊 Evento de busca registrado para {tel}")
                 except Exception as e:
                     logger.error(f"Erro analytics vector: {e}")
 
