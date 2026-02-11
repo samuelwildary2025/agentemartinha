@@ -93,27 +93,35 @@ def search_products_vector(query: str, telefone_cliente: str = "") -> str:
                 # LOG ANALYTICS
                 try:
                     from tools.analytics import log_event
+                    import re
+                    
+                    # Definir ID de sessão (Telefone ou Anonimo)
+                    session_id = "anonymous"
                     if telefone_cliente:
-                        import re
-                        tel = re.sub(r"\D", "", telefone_cliente)
-                        
-                        # Determine what to log
-                        meta = {"query": query}
-                        
-                        # If we found something relevant
-                        top_product = None
-                        if filtered: top_product = filtered[0]
-                        elif results: top_product = results[0] # Fallback
-                        
-                        if top_product:
-                            # Try to get clean name from metadata, else content
-                            p_meta = top_product.get("metadata") or {}
-                            p_name = p_meta.get("product") or p_meta.get("nome") or top_product.get("content")
-                            if p_name:
-                                meta["found_product"] = str(p_name)[:100] # Limit length
-                        
-                        log_event(tel, "product_search", meta)
-                        logger.info(f"📊 Evento de busca registrado para {tel}")
+                        session_id = re.sub(r"\D", "", telefone_cliente)
+                    
+                    # Determine what to log
+                    meta = {"query": query}
+                    
+                    # If we found something relevant
+                    top_product = None
+                    if filtered: top_product = filtered[0]
+                    elif results: top_product = results[0] # Fallback
+                    
+                    if top_product:
+                        # Try to get clean name from metadata, else content
+                        p_meta = top_product.get("metadata") or {}
+                        p_name = p_meta.get("product") or p_meta.get("nome") or top_product.get("content")
+                        if p_name:
+                            meta["found_product"] = str(p_name)[:100] # Limit length
+                    
+                    # Registrar evento mesmo sem telefone (importante para dashboard global)
+                    log_event(session_id, "product_search", meta)
+                    if session_id != "anonymous":
+                        logger.info(f"📊 Evento de busca registrado para {session_id}")
+                    else:
+                        logger.info(f"📊 Evento de busca registrado (Anônimo/Interno)")
+
                 except Exception as e:
                     logger.error(f"Erro analytics vector: {e}")
 
