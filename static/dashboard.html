@@ -430,7 +430,8 @@
                             <span
                                 style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Pedidos</span>
                             <div class="kpi-icon" style="background: rgba(52, 199, 89, 0.1); color: var(--success);">
-                                <span class="material-symbols-rounded">shopping_cart</span></div>
+                                <span class="material-symbols-rounded">shopping_cart</span>
+                            </div>
                         </div>
                         <div>
                             <div class="kpi-value" id="kpi-pedidos">0</div>
@@ -443,7 +444,8 @@
                             <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Taxa de
                                 Resposta</span>
                             <div class="kpi-icon" style="background: rgba(255, 149, 0, 0.1); color: var(--warning);">
-                                <span class="material-symbols-rounded">bolt</span></div>
+                                <span class="material-symbols-rounded">bolt</span>
+                            </div>
                         </div>
                         <div>
                             <div class="kpi-value">~2s</div>
@@ -456,7 +458,8 @@
                             <span
                                 style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Satisfação</span>
                             <div class="kpi-icon" style="background: rgba(255, 59, 48, 0.1); color: var(--danger);">
-                                <span class="material-symbols-rounded">favorite</span></div>
+                                <span class="material-symbols-rounded">favorite</span>
+                            </div>
                         </div>
                         <div>
                             <div class="kpi-value">4.9</div>
@@ -592,19 +595,16 @@
         // --- AUTH ---
         function checkAuth() {
             const token = localStorage.getItem('dash_token');
-            if (!token) {
-                window.location.href = '/dashboard'; // Redirect to login (handled by same page logic if needed, but assuming index.html handles login overlay)
-                // Actually, this simple dash assumes login is overlay. 
-                // Using existing logic:
-                if (document.getElementById('login-overlay')) {
-                    // It is already there, do nothing
-                }
-            } else {
+            if (token) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('wrapper').style.display = 'block';
                 loadDashboardData();
                 // Set 'Início' as active default
                 document.querySelector('.menu-item').classList.add('active');
+            } else {
+                // Not authenticated, show login screen
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('wrapper').style.display = 'none';
             }
         }
 
