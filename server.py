@@ -795,6 +795,17 @@ async def webhook(req: Request, tasks: BackgroundTasks):
                     set_agent_cooldown(tel, ttl)
                     logger.info(f"🙋 Human Takeover ativado para {tel} - IA pausa por {ttl//60}min")
             
+            # --- REMOVER ETIQUETA AUTOMATICAMENTE ---
+            # Se o humano respondeu, remove a etiqueta de "Novo Pedido" (ou similar)
+            try:
+                label_id = getattr(settings, "novo_pedido_label_id", None)
+                if label_id and tel:
+                     num_clean = re.sub(r"\D", "", tel)
+                     whatsapp.remove_label_from_chat(num_clean, label_id)
+                     logger.info(f"🏷️ Etiqueta {label_id} removida automaticamente de {tel} (Resposta Humana)")
+            except Exception as e:
+                logger.error(f"Erro ao remover etiqueta automática: {e}")
+            
             # Salvar mensagem como 'atendente' (humano que assumiu)
             try: 
                 get_session_history(tel).add_human_agent_message(txt)
