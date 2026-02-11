@@ -729,6 +729,20 @@ def buffer_loop(tel):
 @app.get("/")
 async def root(): return {"status":"online", "ver":"1.6.0"}
 
+@app.get("/api/debug/clear_cooldown/{phone}")
+async def clear_cooldown_endpoint(phone: str):
+    """Limpa o cooldown do agente para um telefone específico"""
+    phone = re.sub(r"\D", "", phone)
+    try:
+        from tools.redis_tools import client
+        key = f"cooldown:{phone}"
+        client.delete(key)
+        logger.info(f"🧹 Cooldown limpo via API para {phone}")
+        return {"status": "ok", "message": f"Cooldown limpo para {phone}"}
+    except Exception as e:
+        logger.error(f"Erro ao limpar cooldown: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.get("/health")
 async def health(): return {"status":"healthy", "ts":datetime.now().isoformat()}
 
