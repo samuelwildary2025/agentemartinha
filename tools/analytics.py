@@ -123,3 +123,103 @@ def get_recent_events(limit=20):
     except Exception as e:
         logger.error(f"Erro ao listar eventos: {e}")
         return []
+
+def get_all_contacts():
+    """Retorna lista de contatos (sessões) com data da última mensagem."""
+    try:
+        conn = get_db_connection()
+        if not conn: return []
+        
+        # O nome da tabela de mensagens é definido no settings.py (postgres_table_name)
+        table_name = settings.postgres_table_name
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Pega sessões distintas. 
+        # ATENÇÃO: A tabela message_store do LangChain não tem 'updated_at' fácil, 
+        # mas podemos assumir que session_id é o telefone.
+        # Se a tabela tiver estrutura padrão do PostgresChatMessageHistory: (id, session_id, message, created_at)
+        # Vamos tentar pegar a última mensagem de cada sessão.
+        
+        # Verifica colunas da tabela primeiro para evitar erro
+        cur.execute(f"SELECT * FROM {table_name} LIMIT 0")
+        colnames = [desc[0] for desc in cur.description]
+        
+        if 'created_at' in colnames:
+            sql = f"""
+                SELECT session_id as phone, MAX(created_at) as last_interaction
+                FROM {table_name}
+                GROUP BY session_id
+                ORDER BY last_interaction DESC
+            """
+        else:
+            # Fallback se não tiver timestamp (improvável se for schema padrão)
+            sql = f"""
+                SELECT DISTINCT session_id as phone, NULL as last_interaction
+                FROM {table_name}
+            """
+            
+        cur.execute(sql)
+        contacts = cur.fetchall()
+        
+        # Formatar data
+        for c in contacts:
+            if c.get('last_interaction'):
+                c['last_interaction'] = c['last_interaction'].strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                c['last_interaction'] = "N/A"
+                
+        cur.close()
+        conn.close()
+        return contacts
+    except Exception as e:
+        logger.error(f"Erro ao listar contatos: {e}")
+        return []
+
+def get_chat_history(phone: str):
+    """Retorna histórico de mensagens de um telefone específico."""
+    try:
+        conn = get_db_connection()
+        if not conn: return []
+        
+        table_name = settings.postgres_table_name
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Schema padrão LangChain: id, session_id, message (jsonb), created_at (opcional)
+        # message field is JSONB: {"type": "human/ai", "data": {"content": "..."}}
+        
+        sql = f"""
+            SELECT message, id
+            FROM {table_name}
+            WHERE session_id = %s
+            ORDER BY id ASC
+        """
+        
+        cur.execute(sql, (phone,))
+        rows = cur.fetchall()
+        
+        history = []
+        for r in rows:
+            msg_data = r['message']
+            # Tenta decodificar se for string
+            if isinstance(msg_data, str):
+                msg_data = json.loads(msg_data)
+                
+            # Extrair conteúdo útil
+            msg_type = msg_data.get("type", "unknown")
+            content = msg_data.get("data", {}).get("content") or msg_data.get("content", "")
+            
+            if content:
+                history.append({
+                    "role": "user" if msg_type == "human" else "assistant",
+                    "content": content,
+                    "type": msg_type
+                })
+                
+        cur.close()
+        conn.close()
+        return history
+    except Exception as e:
+        logger.error(f"Erro ao obter histórico ({phone}): {e}")
+        return []

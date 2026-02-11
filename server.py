@@ -603,7 +603,7 @@ def process_async(tel, msg, mid=None):
 # --- Dashboard API ---
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from tools.analytics import get_daily_stats, get_recent_events, log_event
+from tools.analytics import get_daily_stats, get_recent_events, log_event, get_all_contacts, get_chat_history
 
 # Mount static files (dashboard HTML/JS/CSS)
 import os
@@ -637,6 +637,14 @@ async def dashboard_stats():
 @app.get("/api/dashboard/events")
 async def dashboard_events():
     return get_recent_events()
+
+@app.get("/api/dashboard/contacts")
+async def dashboard_contacts():
+    return get_all_contacts()
+
+@app.get("/api/dashboard/history/{phone}")
+async def dashboard_history(phone: str):
+    return get_chat_history(phone)
 
 
 def buffer_loop(tel):
