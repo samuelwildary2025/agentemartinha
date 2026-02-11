@@ -611,7 +611,7 @@ def process_async(tel, msg, mid=None):
 # --- Dashboard API ---
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from tools.analytics import get_daily_stats, get_recent_events, log_event, get_all_contacts, get_chat_history
+from tools.analytics import get_daily_stats, get_recent_events, log_event, get_all_contacts, get_chat_history, generate_daily_insight, get_latest_insight
 
 # Mount static files (dashboard HTML/JS/CSS)
 import os
@@ -653,6 +653,21 @@ async def dashboard_contacts():
 @app.get("/api/dashboard/history/{phone}")
 async def dashboard_history(phone: str):
     return get_chat_history(phone)
+
+@app.get("/api/dashboard/insight")
+async def dashboard_insight():
+    insight = get_latest_insight()
+    if insight:
+        return insight
+    return {"text": "Nenhum insight disponível ainda. O primeiro será gerado às 17h.", "date": None}
+
+@app.post("/api/dashboard/insight/generate")
+async def dashboard_generate_insight():
+    """Gerar insight manualmente (para testes)."""
+    text = generate_daily_insight()
+    if text:
+        return {"status": "ok", "text": text}
+    return JSONResponse(status_code=500, content={"status": "error", "message": "Erro ao gerar insight"})
 
 
 def buffer_loop(tel):
@@ -818,6 +833,37 @@ async def direct_msg(msg: WhatsAppMessage):
         return AgentResponse(success=True, response=res["output"], telefone=msg.telefone, timestamp="")
     except Exception as e:
         return AgentResponse(success=False, response="", telefone="", error=str(e))
+
+# --- Scheduler: Insight diário às 17:00 ---
+def _insight_scheduler():
+    """Thread que verifica a hora e gera insight às 17:00."""
+    import time as _time
+    generated_today = False
+    
+    while True:
+        try:
+            now = datetime.now()
+            current_hour = now.hour
+            
+            # Reset flag at midnight
+            if current_hour == 0:
+                generated_today = False
+            
+            # Generate at 17:00 (5 PM)
+            if current_hour == 17 and not generated_today:
+                logger.info("🕐 17:00 - Gerando insight diário...")
+                generate_daily_insight()
+                generated_today = True
+            
+            _time.sleep(60)  # Check every minute
+        except Exception as e:
+            logger.error(f"Erro no scheduler de insight: {e}")
+            _time.sleep(300)  # Wait 5 min on error
+
+# Start scheduler thread
+_insight_thread = threading.Thread(target=_insight_scheduler, daemon=True)
+_insight_thread.start()
+logger.info("📅 Scheduler de insight diário iniciado (17:00)")
 
 if __name__ == "__main__":
     import uvicorn

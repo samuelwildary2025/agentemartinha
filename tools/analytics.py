@@ -233,3 +233,103 @@ def get_chat_history(phone: str):
     except Exception as e:
         logger.error(f"Erro ao obter histórico ({phone}): {e}")
         return []
+
+
+def generate_daily_insight():
+    """
+    Gera um insight diário usando OpenAI baseado nos dados de analytics do dia.
+    Chamado automaticamente às 17:00 pelo scheduler.
+    """
+    try:
+        # 1. Coletar dados do dia
+        stats = get_daily_stats()
+        
+        # 2. Montar contexto para a IA
+        top_products_str = ""
+        if stats.get("top_products"):
+            top_products_str = ", ".join([f"{p['product']} ({p['count']}x)" for p in stats["top_products"]])
+        else:
+            top_products_str = "Nenhum produto pesquisado hoje."
+        
+        avg_time = stats.get("avg_response_time")
+        avg_time_str = f"{avg_time}s" if avg_time else "sem dados"
+        
+        summary = (
+            f"Resumo do dia:\n"
+            f"- Total de atendimentos: {stats.get('total_conversations', 0)}\n"
+            f"- Pedidos finalizados: {stats.get('total_orders', 0)}\n"
+            f"- Tempo médio de resposta: {avg_time_str}\n"
+            f"- Produtos mais procurados: {top_products_str}\n"
+        )
+        
+        # 3. Chamar OpenAI para gerar insight
+        from openai import OpenAI
+        client = OpenAI(api_key=settings.openai_api_key)
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é um analista de dados de uma loja de artigos para festa chamada Festinfan e Amelinha. "
+                        "Gere um insight de negócio curto e útil (máximo 2 frases) baseado nos dados fornecidos. "
+                        "Seja direto e prático. Use linguagem simples. "
+                        "Se não houver dados suficientes, dê uma dica geral sobre o negócio."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": summary
+                }
+            ],
+            max_tokens=150,
+            temperature=0.7
+        )
+        
+        insight_text = response.choices[0].message.content.strip()
+        
+        # 4. Salvar no banco como evento analytics
+        log_event("system", "daily_insight", {
+            "text": insight_text,
+            "stats_summary": summary
+        })
+        
+        logger.info(f"✨ Insight diário gerado: {insight_text[:100]}...")
+        return insight_text
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar insight diário: {e}")
+        return None
+
+
+def get_latest_insight():
+    """Retorna o insight mais recente."""
+    try:
+        conn = get_db_connection()
+        if not conn: return None
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute("""
+            SELECT metadata->>'text' as text, created_at
+            FROM analytics_events
+            WHERE event_type = 'daily_insight'
+            ORDER BY created_at DESC
+            LIMIT 1
+        """)
+        
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if row:
+            return {
+                "text": row["text"],
+                "date": row["created_at"].strftime("%d/%m/%Y %H:%M")
+            }
+        return None
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter insight: {e}")
+        return None

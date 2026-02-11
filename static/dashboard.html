@@ -473,9 +473,9 @@
                     </div>
                     <div>
                         <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600;">Insight da IA</h4>
-                        <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                            A demanda por artigos de festa aumentou 15% esta semana. Sugerimos repor o estoque de
-                            balões metalizados.
+                        <p id="insight-text"
+                            style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                            Carregando insight...
                         </p>
                     </div>
                 </div>
@@ -668,10 +668,19 @@
                     topList.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px;">Sem dados hoje.</div>';
                 }
 
-                // Chart Logic (Assuming reusing existing logic or simplified here)
-                // ... (Chart updating logic already present in previous turn) ...
+                // Chart Logic
+                updateChart(stats);
 
-                // 2. Events
+                // 2. Insight da IA
+                try {
+                    const resInsight = await fetch(API_BASE + '/insight');
+                    const insight = await resInsight.json();
+                    document.getElementById('insight-text').innerText = insight.text || 'Nenhum insight disponível.';
+                } catch (e) {
+                    document.getElementById('insight-text').innerText = 'Insight indisponível no momento.';
+                }
+
+                // 3. Events
                 const resEvents = await fetch(API_BASE + '/events');
                 const events = await resEvents.json();
                 const eventsList = document.getElementById('events-list');
