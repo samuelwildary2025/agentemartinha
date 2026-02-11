@@ -119,12 +119,16 @@ def _build_llm():
             convert_system_message_to_human=True,  # Necessário para Gemini processar system prompts
         )
     else:
-        logger.info(f"🚀 Usando OpenAI: {model}")
-        return ChatOpenAI(
-            model=model,
-            openai_api_key=settings.openai_api_key,
-            temperature=temp
-        )
+        base_url = getattr(settings, "openai_api_base", None)
+        logger.info(f"🚀 Usando OpenAI-compat: {model} | Base: {base_url or 'default'}")
+        kwargs = {
+            "model": model,
+            "openai_api_key": settings.openai_api_key,
+            "temperature": temp,
+        }
+        if base_url:
+            kwargs["openai_api_base"] = base_url
+        return ChatOpenAI(**kwargs)
 
 def create_agent_with_history():
     system_prompt = load_system_prompt()
