@@ -81,9 +81,10 @@ def time_tool() -> str:
     """Retorna a data e hora atual e o status de funcionamento da loja."""
     return get_current_time()
 
-# Ferramentas ativas (Alinhadas com n8n)
+# Ferramentas ativas
+from tools.vector_search import conhecimento_vetorial
 ACTIVE_TOOLS = [
-    conhecimento,
+    conhecimento_vetorial,
     especialista_humano,
     time_tool,
 ]
