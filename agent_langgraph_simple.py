@@ -120,10 +120,18 @@ def _build_llm():
         )
     else:
         base_url = getattr(settings, "openai_api_base", None)
+        
+        # Lógica de chave: Se tiver base_url (Grok/xAI), tenta usar xai_api_key
+        # Se não, usa openai_api_key padrão
+        api_key = settings.openai_api_key
+        if base_url and "x.ai" in base_url and settings.xai_api_key:
+            api_key = settings.xai_api_key
+            logger.info("🔑 Usando chave xAI dedicada para o modelo")
+            
         logger.info(f"🚀 Usando OpenAI-compat: {model} | Base: {base_url or 'default'}")
         kwargs = {
             "model": model,
-            "openai_api_key": settings.openai_api_key,
+            "openai_api_key": api_key,
             "temperature": temp,
         }
         if base_url:

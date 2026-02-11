@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # LLM Provider (openai ou google)
     openai_api_key: Optional[str] = None
     openai_api_base: Optional[str] = None  # Para xAI Grok ou outros provedores OpenAI-compatíveis
+    xai_api_key: Optional[str] = None      # Chave específica da xAI
     google_api_key: Optional[str] = None
     llm_model: str = "gemini-2.0-flash-lite"
     llm_temperature: float = 0.3
