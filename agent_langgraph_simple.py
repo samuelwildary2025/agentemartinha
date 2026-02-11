@@ -124,9 +124,18 @@ def _build_llm():
         # Lógica de chave: Se tiver base_url (Grok/xAI), tenta usar xai_api_key
         # Se não, usa openai_api_key padrão
         api_key = settings.openai_api_key
-        if base_url and "x.ai" in base_url and settings.xai_api_key:
-            api_key = settings.xai_api_key
-            logger.info("🔑 Usando chave xAI dedicada para o modelo")
+        
+        # Debug das chaves (mascarado)
+        k_openai = f"{api_key[:8]}..." if api_key else "None"
+        k_xai = f"{settings.xai_api_key[:8]}..." if settings.xai_api_key else "None"
+        logger.info(f"🔑 Keys loaded: OpenAI={k_openai} | xAI={k_xai}")
+
+        if base_url and "x.ai" in base_url:
+            if settings.xai_api_key:
+                api_key = settings.xai_api_key
+                logger.info("✅ Usando variável XAI_API_KEY para Grok")
+            else:
+                logger.warning("⚠️ Base URL é xAI mas XAI_API_KEY não definida. Usando OPENAI_API_KEY.")
             
         logger.info(f"🚀 Usando OpenAI-compat: {model} | Base: {base_url or 'default'}")
         kwargs = {
