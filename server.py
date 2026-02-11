@@ -714,13 +714,6 @@ def buffer_loop(tel):
 
             
             # Processar (enquanto isso, novas mensagens podem chegar)
-            # HACK: Auto-limpar cooldown para teste
-            if n == "558587520060":
-                try: 
-                    from tools.redis_tools import client
-                    client.delete(f"cooldown:{n}")
-                except: pass
-                
             # Passa o last_mid para marcar como lido
             process_async(n, final, mid=last_mid)
             

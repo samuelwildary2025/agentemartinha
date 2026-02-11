@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     products_db_connection_string: Optional[str] = "postgres://postgres:85885885@31.97.252.6:6087/festinfan-bd-produtos?sslmode=disable"
     
     # Redis (Buffer de mensagens + Cooldown)
+    redis_url: Optional[str] = None  # URL completa: redis://:pass@host:port/db
     redis_host: str = "31.97.252.6"
     redis_port: int = 9886
     redis_password: Optional[str] = "85885885"

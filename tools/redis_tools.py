@@ -23,18 +23,31 @@ def get_redis_client() -> Optional[redis.Redis]:
     
     if _redis_client is None:
         try:
-            _redis_client = redis.Redis(
-                host=settings.redis_host,
-                port=settings.redis_port,
-                db=settings.redis_db,
-                password=settings.redis_password if settings.redis_password else None,
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5
-            )
+            if settings.redis_url:
+                # Usa URL completa (prioritário)
+                _redis_client = redis.from_url(
+                    settings.redis_url,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5
+                )
+                logger.info(f"Conectado ao Redis via URL: {settings.redis_url.split('@')[-1]}")
+            else:
+                # Usa Host/Port (legado)
+                _redis_client = redis.Redis(
+                    host=settings.redis_host,
+                    port=settings.redis_port,
+                    db=settings.redis_db,
+                    password=settings.redis_password if settings.redis_password else None,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5
+                )
+            
             # Testar conexão
             _redis_client.ping()
-            logger.info(f"Conectado ao Redis: {settings.redis_host}:{settings.redis_port}")
+            if not settings.redis_url:
+                logger.info(f"Conectado ao Redis: {settings.redis_host}:{settings.redis_port}")
         
         except redis.exceptions.ConnectionError as e:
             logger.error(f"Erro ao conectar ao Redis: {e}")
