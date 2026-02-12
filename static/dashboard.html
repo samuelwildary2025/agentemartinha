@@ -11,337 +11,223 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-        :root {
-            --bg-body: #F5F7FA;
-            --bg-card: #FFFFFF;
-            --text-primary: #1D1D1F;
-            --text-secondary: #6E6E73;
-            --accent-blue: #0071E3;
-            /* Apple Blue */
-            --accent-blue-light: #E8F2FF;
-            --border-blue: #D1E3FF;
-            --radius-l: 16px;
-            /* Slightly smaller radius for compact feel */
-            --radius-m: 10px;
-            --header-height: 60px;
-            --sidebar-width: 90px;
+        /* --- Responsive (Mobile) --- */
+        @media (max-width: 768px) {
+            :root {
+                --header-height: 50px;
+                --sidebar-width: 0px;
+                /* Hide sidebar space */
+            }
+
+            /* Header adjustments */
+            .header-bar {
+                padding: 0 16px;
+            }
+
+            .header-logo span {
+                font-size: 16px;
+            }
+
+            .header-user {
+                display: none;
+                /* Hide user info to save space, maybe keep logout icon? */
+            }
+
+            /* Sidebar becomes Bottom Nav */
+            .sidebar {
+                top: auto;
+                bottom: 0;
+                width: 100%;
+                height: 60px;
+                /* Fixed height for bottom nav */
+                flex-direction: row;
+                justify-content: space-around;
+                border-right: none;
+                border-top: 1px solid #E5E5EA;
+                padding: 0;
+                z-index: 1000;
+            }
+
+            .nav-menu {
+                flex-direction: row;
+                width: 100%;
+                justify-content: space-around;
+                align-items: center;
+                height: 100%;
+                margin-bottom: 0 !important;
+            }
+
+            /* Hide the spacer div and the second nav-menu (logout) on mobile bottom nav if desired, 
+               or merge them. For now, let's hide the logout button in the bottom nav to keep it clean,
+               user can logout from a profile section or we add a small logout icon in header? 
+               Let's actually keep the Logout in the bottom nav as a 4th item if it fits, 
+               or just hide the second .nav-menu block and rely on header? 
+               The header user section is hidden, so we need a way to logout.
+               Let's make the bottom nav contain: Home, Contacts, Messages, Logout (Icon only)
+            */
+
+            .sidebar>div[style="flex:1"] {
+                display: none;
+            }
+
+            .sidebar .nav-menu:last-child {
+                display: none;
+                /* Hide the separate logout menu container */
+            }
+
+            /* We need to inject Logout into the main nav-menu or handle it. 
+               Let's just add a logout icon to the main nav-menu via JS or HTML modification?
+               Actually, simpler: Let's show the header-user LOGOUT button as just an icon on mobile.
+            */
+            .header-user {
+                display: flex;
+            }
+
+            .header-user>span {
+                /* Only hide the direct child greeting text */
+                display: none;
+            }
+
+            .btn-logout {
+                padding: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .btn-logout .text-logout {
+                display: none;
+            }
+
+            .btn-logout .material-symbols-rounded {
+                display: block !important;
+            }
+
+
+            .menu-item {
+                flex: 1;
+                height: 100%;
+                justify-content: center;
+                border-radius: 0;
+                padding: 0;
+            }
+
+            .menu-item span {
+                font-size: 24px;
+                margin-bottom: 2px;
+            }
+
+            .menu-item.active {
+                border: none;
+                border-top: 2px solid var(--accent-blue);
+                background: transparent;
+            }
+
+            /* Main Content */
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-bottom: 80px;
+                /* Space for bottom nav */
+                margin-top: var(--header-height);
+            }
+
+            /* Grid Stacking */
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .insights-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            /* Mobile Tables */
+            .card-base {
+                overflow-x: auto;
+                /* Enable scroll for tables */
+            }
+
+            /* Messages Mobile View */
+            #section-messages .card-base {
+                height: 100%;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+
+            #section-messages {
+                /* On mobile, this section takes full height minus header/nav */
+                height: calc(100vh - var(--header-height) - 60px);
+                padding: 0;
+                margin: -16px;
+                /* Negate main-content padding */
+                margin-top: 0;
+                margin-bottom: 0;
+                /* Handled by main container padding-bottom? No, need to override */
+            }
+
+            .main-content:has(#section-messages[style="display: block;"]) {
+                padding: 0;
+                padding-top: var(--header-height);
+                padding-bottom: 60px;
+            }
+
+            #section-messages>div {
+                /* The flex container */
+                gap: 0;
+                height: 100% !important;
+                /* Force full height */
+            }
+
+            /* Hide Chat Window by default on mobile */
+            .mobile-chat-view #chat-window-container {
+                display: flex !important;
+                position: fixed;
+                top: var(--header-height);
+                left: 0;
+                right: 0;
+                bottom: 60px;
+                z-index: 50;
+                background: white;
+            }
+
+            .mobile-chat-view #contact-list-container {
+                display: none !important;
+            }
+
+            /* Default state (List visible, Chat hidden) */
+            #chat-window-container {
+                display: none;
+                /* Hidden on mobile by default */
+            }
+
+            #contact-list-container {
+                width: 100% !important;
+                display: flex;
+            }
+
+            /* Back Update */
+            #mobile-back-btn {
+                display: block !important;
+            }
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
+        /* Desktop override for messages to ensure side-by-side */
+        @media (min-width: 769px) {
+            #chat-window-container {
+                display: flex !important;
+            }
 
-        /* --- Global Layout --- */
-        /* 1. Full Width Header */
-        .header-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--header-height);
-            background: var(--accent-blue);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-logo img {
-            height: 32px;
-            /* background: white; removed */
-            /* padding: 4px; removed */
-            border-radius: 6px;
-        }
-
-        .header-logo span {
-            font-weight: 700;
-            font-size: 18px;
-            letter-spacing: -0.5px;
-        }
-
-        .header-user {
-            font-size: 14px;
-            font-weight: 500;
-            opacity: 0.9;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .btn-logout {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: var(--radius-m);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* 2. Sidebar (Below Header) - SLIM STYLE */
-        .sidebar {
-            position: fixed;
-            top: var(--header-height);
-            left: 0;
-            bottom: 0;
-            width: var(--sidebar-width);
-            background: var(--bg-card);
-            border-right: 1px solid #E5E5EA;
-            padding: 16px 8px;
-            /* Compact padding */
-            z-index: 900;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .menu-item {
-            padding: 12px 4px;
-            border-radius: var(--radius-m);
-            color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 600;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            text-align: center;
-        }
-
-        .menu-item span {
-            font-size: 20px;
-        }
-
-        /* Icon bigger */
-
-        .menu-item:hover {
-            background: var(--accent-blue-light);
-            color: var(--accent-blue);
-        }
-
-        .menu-item.active {
-            background: var(--accent-blue-light);
-            color: var(--accent-blue);
-            font-weight: 600;
-            border: 1px solid var(--border-blue);
-        }
-
-        /* 3. Main Content (Below Header, Right of Sidebar) */
-        .main-content {
-            margin-top: var(--header-height);
-            margin-left: var(--sidebar-width);
-            padding: 24px 32px;
-            min-height: calc(100vh - var(--header-height));
-        }
-
-        /* --- Components (Compact) --- */
-        h1 {
-            margin: 0 0 4px 0;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        p.subtitle {
-            margin: 0 0 20px 0;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        /* KPI Cards (Smaller) */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .card-base {
-            background: var(--bg-card);
-            border-radius: var(--radius-l);
-            border: 1px solid var(--border-blue);
-            box-shadow: 0 2px 6px rgba(0, 50, 100, 0.03);
-            padding: 16px;
-            /* Reduced Padding */
-        }
-
-        .kpi-card {
-            display: flex;
-            flex-direction: column;
-            min-height: 80px;
-            /* Thinner */
-        }
-
-        .kpi-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 8px;
-        }
-
-        .kpi-icon {
-            background: var(--accent-blue-light);
-            color: var(--accent-blue);
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            /* Smaller Icon */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        .kpi-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .kpi-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-top: auto;
-        }
-
-        /* Banner (Compact) */
-        .insights-banner {
-            background: linear-gradient(135deg, var(--accent-blue) 0%, #005BB5 100%);
-            border-radius: var(--radius-l);
-            padding: 16px 20px;
-            /* Reduced Padding */
-            color: white;
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.15);
-            align-items: center;
-            font-size: 14px;
-            /* Smaller Text */
-        }
-
-        .insights-icon {
-            font-size: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            /* Smaller Icon */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .insights-text h3 {
-            margin: 0 0 2px 0;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .insights-text p {
-            margin: 0;
-            opacity: 0.95;
-            line-height: 1.4;
-        }
-
-        /* Charts Section */
-        .charts-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .chart-card {
-            display: flex;
-            flex-direction: column;
-            height: 320px;
-            /* Reduced Height */
-        }
-
-        .card-header {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #F5F5F7;
-            padding-bottom: 8px;
-        }
-
-        /* Table */
-        .table-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            color: #86868B;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 8px 4px;
-            border-bottom: 1px solid #E5E5EA;
-        }
-
-        td {
-            padding: 10px 4px;
-            font-size: 13px;
-            border-bottom: 1px solid #F5F7FA;
-            vertical-align: middle;
-        }
-
-        .badge {
-            background: #E8F2FF;
-            color: var(--accent-blue);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        /* Login Screen (Adjusted) */
-        #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 2000;
-            background: #F5F7FA;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            #contact-list-container {
+                display: flex !important;
+            }
         }
     </style>
 </head>
@@ -374,7 +260,11 @@
             </div>
             <div class="header-user">
                 <span>Olá, Admin</span>
-                <button class="btn-logout" onclick="logout()">Sair</button>
+                <button class="btn-logout" onclick="logout()">
+                    <span class="material-symbols-rounded" style="font-size: 18px; display: none;">logout</span>
+                    <!-- Icon for mobile -->
+                    <span class="text-logout">Sair</span>
+                </button>
             </div>
         </div>
 
@@ -481,7 +371,7 @@
                 </div>
 
                 <!-- Charts & Insights Grid -->
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                <div class="charts-row"> <!-- Changed from inline style grid to class -->
 
                     <!-- Chart -->
                     <div class="card-base" style="padding: 24px; min-height: 320px;">
@@ -520,8 +410,9 @@
             <!-- SECTION: CONTACTS -->
             <div id="section-contacts" class="view-section" style="display: none;">
                 <h1 style="margin-bottom: 24px;">Contatos</h1>
-                <div class="card-base" style="padding: 0; overflow: hidden;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <div class="card-base" style="padding: 0; overflow: hidden;"> <!-- Table Wrapper -->
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px;">
+                        <!-- Min width for scroll -->
                         <thead style="background: var(--bg-main); border-bottom: 1px solid var(--border-light);">
                             <tr>
                                 <th
@@ -548,7 +439,8 @@
             <div id="section-messages" class="view-section" style="display: none;">
                 <div style="display: flex; gap: 24px; height: calc(100vh - 120px);">
                     <!-- Conversation List (Sidebar for Messages) -->
-                    <div class="card-base" style="width: 300px; padding: 0; display: flex; flex-direction: column;">
+                    <div id="contact-list-container" class="card-base"
+                        style="width: 300px; padding: 0; display: flex; flex-direction: column;">
                         <div style="padding: 16px; border-bottom: 1px solid var(--border-light);">
                             <h3 style="margin: 0; font-size: 16px;">Conversas</h3>
                         </div>
@@ -558,11 +450,15 @@
                     </div>
 
                     <!-- Chat Window -->
-                    <div class="card-base"
+                    <div id="chat-window-container" class="card-base"
                         style="flex: 1; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
                         <div id="chat-header"
-                            style="padding: 16px; border-bottom: 1px solid var(--border-light); background: var(--bg-main); font-weight: 600;">
-                            Selecione uma conversa
+                            style="padding: 16px; border-bottom: 1px solid var(--border-light); background: var(--bg-main); font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                            <button id="mobile-back-btn" onclick="backToContacts()"
+                                style="display:none; background:none; border:none; cursor:pointer; padding:0;">
+                                <span class="material-symbols-rounded">arrow_back</span>
+                            </button>
+                            <span>Selecione uma conversa</span>
                         </div>
                         <div id="chat-window" style="flex: 1; padding: 24px; overflow-y: auto; background: #FFF;">
                             <div style="text-align: center; color: var(--text-secondary); margin-top: 40px;">
@@ -776,6 +672,11 @@
             loadChatHistory(phone);
         }
 
+        // Mobile: Back to contacts list
+        function backToContacts() {
+            document.getElementById('section-messages').classList.remove('mobile-chat-view');
+        }
+
         // --- MESSAGES ---
         async function loadContactsForChat() {
             try {
@@ -793,7 +694,14 @@
         }
 
         async function loadChatHistory(phone) {
-            document.getElementById('chat-header').innerText = `Conversa com ${phone}`;
+            // Update Header
+            const headerTextSpan = document.querySelector('#chat-header span:last-child');
+            if (headerTextSpan) headerTextSpan.innerText = `Conversa com ${phone}`;
+            else document.querySelector('#chat-header').innerText = `Conversa com ${phone}`;
+
+            // Mobile: Switch to chat view
+            document.getElementById('section-messages').classList.add('mobile-chat-view');
+
             const win = document.getElementById('chat-window');
             win.innerHTML = '<div style="text-align:center; padding: 20px;">Carregando...</div>';
 
