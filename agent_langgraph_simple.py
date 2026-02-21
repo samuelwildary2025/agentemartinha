@@ -233,68 +233,53 @@ def run_agent_langgraph(telefone: str, mensagem: str) -> Dict[str, Any]:
         
         result = agent.invoke(initial_state, config)
         
-        # 4. Extrair resposta (com fallback para Gemini empty responses)
+        # 4. Extrair resposta (apenas do turno atual)
         output = ""
+        current_turn_messages = []
         if isinstance(result, dict) and "messages" in result:
             messages = result["messages"]
             logger.debug(f"📨 Total de mensagens no resultado: {len(messages) if messages else 0}")
             if messages:
-                # Log das últimas mensagens para debug
-                for i, msg in enumerate(messages[-5:]):
-                    msg_type = type(msg).__name__
-                    has_tool_calls = hasattr(msg, 'tool_calls') and msg.tool_calls
-                    content_preview = str(msg.content)[:100] if msg.content else "(vazio)"
-                    logger.debug(f"📝 Msg[{i}] type={msg_type} tool_calls={has_tool_calls} content={content_preview}")
+                # Encontrar a última mensagem do usuário (início do turno atual)
+                last_human_idx = -1
+                for i in range(len(messages) - 1, -1, -1):
+                    if isinstance(messages[i], HumanMessage):
+                        last_human_idx = i
+                        break
                 
-                # Tentar pegar a última mensagem AI que tenha conteúdo real (não tool call)
-                for msg in reversed(messages):
-                    # Verificar se é AIMessage
+                current_turn_messages = messages[last_human_idx + 1:] if last_human_idx != -1 else messages
+                
+                # Tentar pegar a última mensagem AI que tenha conteúdo real nesta rodada
+                for msg in reversed(current_turn_messages):
                     if not isinstance(msg, AIMessage):
                         continue
                     
-                    # Ignorar mensagens que são tool calls (não tem resposta textual)
-                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
-                        continue
-                    
-                    # Extrair conteúdo
                     content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                    has_tools = hasattr(msg, 'tool_calls') and bool(msg.tool_calls)
+                    has_content = bool(content and content.strip())
                     
-                    # Ignorar mensagens vazias
-                    if not content or not content.strip():
+                    # Ignorar mensagens que apenas chamam tool sem dar texto pro usuário
+                    if has_tools and not has_content:
                         continue
                     
-                    # Ignorar mensagens que parecem ser dados estruturados
-                    if content.strip().startswith(("[", "{")):
+                    # Ignorar mensagens vazias ou que parecem ser dados estruturados
+                    if not has_content or content.strip().startswith(("[", "{")):
                         continue
                     
                     output = content
                     break
         
-        # Fallback se ainda estiver vazio
+        # Fallback se a saída ainda estiver vazia
         if not output or not output.strip():
-            # Logar o que foi rejeitado para debug
-            if isinstance(result, dict) and "messages" in result:
-                last_ai = None
-                for msg in reversed(result["messages"]):
-                    if isinstance(msg, AIMessage):
-                        last_ai = msg
-                        break
-                if last_ai:
-                    logger.warning(f"⚠️ Última AIMessage rejeitada: content='{str(last_ai.content)[:200]}' tool_calls={getattr(last_ai, 'tool_calls', None)}")
-            
-            # FALLBACK SIMPLIFICADO (Adaptado para nova lógica n8n)
-            # Se o agente chamou uma tool mas não gerou resposta final, tentamos inferir algo ou pedir desculpas.
-            # No caso do n8n, se chamar 'especialista_humano', o próprio retorno da tool já é a resposta.
-            
+            # FALLBACK SIMPLIFICADO para quando a IA não fechou o turno com texto
             tool_results = []
-            for msg in result.get("messages", []):
+            for msg in current_turn_messages:
                 if hasattr(msg, 'content') and isinstance(msg.content, str):
-                    content = msg.content
-                    if "TRANSBORDO_HUMANO" in content:
+                    if "TRANSBORDO_HUMANO" in msg.content:
                          tool_results.append("transbordo")
             
             if "transbordo" in tool_results:
-                output = "Transferindo para um especialista..."
+                output = "✨ Só um momentinho, vou passar seu pedido para a vendedora! Ela vai verificar se todos os itens estão disponíveis e já te confirmo, tá bem?😉"
             else:
                 output = "Desculpe, não consegui processar sua solicitação. Pode repetir?"
                 logger.warning("⚠️ Resposta vazia do LLM, usando fallback genérico")
