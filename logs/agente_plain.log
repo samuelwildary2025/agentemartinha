@@ -161,3 +161,182 @@ LINE 3:                            1 - (embedding <=> '[0.0233422778...
 2026-02-10 16:07:49 - fix_embeddings - INFO - 📝 Usando colunas ['content'] para vetorização.
 2026-02-10 16:07:49 - fix_embeddings - INFO - 📊 Total de produtos para processar: 0
 2026-02-10 16:07:49 - fix_embeddings - INFO - ✨ Todos os produtos já possuem embedding!
+2026-02-11 08:37:58 - agent_langgraph_simple - INFO - 🔑 Keys loaded: OpenAI=sk-proj-... | xAI=None
+2026-02-11 08:37:58 - agent_langgraph_simple - WARNING - ⚠️ Base URL é xAI mas XAI_API_KEY não definida. Usando OPENAI_API_KEY.
+2026-02-11 08:37:58 - agent_langgraph_simple - INFO - 🚀 Usando OpenAI-compat: grok-4-1-fast-reasoning | Base: https://api.x.ai/v1
+2026-02-11 08:37:59 - agent_langgraph_simple - INFO - Executando agente...
+2026-02-11 08:37:59 - agent_langgraph_simple - ERROR - Falha agente: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+Traceback (most recent call last):
+  File "/Users/samuel/Desktop/agente-martinha/agent_langgraph_simple.py", line 234, in run_agent_langgraph
+    result = agent.invoke(initial_state, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 3085, in invoke
+    for chunk in self.stream(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 2674, in stream
+    for _ in runner.tick(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_runner.py", line 162, in tick
+    run_with_retry(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 657, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 394, in invoke
+    ret = context.run(self.func, *args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/prebuilt/chat_agent_executor.py", line 635, in call_model
+    response = cast(AIMessage, static_model.invoke(model_input, config))  # type: ignore[union-attr]
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 3254, in invoke
+    input_ = context.run(step.invoke, input_, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 5720, in invoke
+    return self.bound.invoke(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 395, in invoke
+    self.generate_prompt(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1025, in generate_prompt
+    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 842, in generate
+    self._generate_with_cache(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1091, in _generate_with_cache
+    result = self._generate(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_openai/chat_models/base.py", line 707, in _generate
+    response = self.client.create(**payload)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_utils/_utils.py", line 275, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/resources/chat/completions.py", line 829, in create
+    return self._post(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1278, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 955, in request
+    return self._request(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1059, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+2026-02-11 08:38:00 - agent_langgraph_simple - INFO - Executando agente...
+2026-02-11 08:38:00 - agent_langgraph_simple - ERROR - Falha agente: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+Traceback (most recent call last):
+  File "/Users/samuel/Desktop/agente-martinha/agent_langgraph_simple.py", line 234, in run_agent_langgraph
+    result = agent.invoke(initial_state, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 3085, in invoke
+    for chunk in self.stream(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 2674, in stream
+    for _ in runner.tick(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_runner.py", line 162, in tick
+    run_with_retry(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 657, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 394, in invoke
+    ret = context.run(self.func, *args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/prebuilt/chat_agent_executor.py", line 635, in call_model
+    response = cast(AIMessage, static_model.invoke(model_input, config))  # type: ignore[union-attr]
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 3254, in invoke
+    input_ = context.run(step.invoke, input_, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 5720, in invoke
+    return self.bound.invoke(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 395, in invoke
+    self.generate_prompt(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1025, in generate_prompt
+    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 842, in generate
+    self._generate_with_cache(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1091, in _generate_with_cache
+    result = self._generate(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_openai/chat_models/base.py", line 707, in _generate
+    response = self.client.create(**payload)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_utils/_utils.py", line 275, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/resources/chat/completions.py", line 829, in create
+    return self._post(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1278, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 955, in request
+    return self._request(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1059, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+2026-02-11 08:38:00 - agent_langgraph_simple - INFO - Executando agente...
+2026-02-11 08:38:01 - agent_langgraph_simple - ERROR - Falha agente: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+Traceback (most recent call last):
+  File "/Users/samuel/Desktop/agente-martinha/agent_langgraph_simple.py", line 234, in run_agent_langgraph
+    result = agent.invoke(initial_state, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 3085, in invoke
+    for chunk in self.stream(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 2674, in stream
+    for _ in runner.tick(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_runner.py", line 162, in tick
+    run_with_retry(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 657, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 394, in invoke
+    ret = context.run(self.func, *args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/prebuilt/chat_agent_executor.py", line 635, in call_model
+    response = cast(AIMessage, static_model.invoke(model_input, config))  # type: ignore[union-attr]
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 3254, in invoke
+    input_ = context.run(step.invoke, input_, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 5720, in invoke
+    return self.bound.invoke(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 395, in invoke
+    self.generate_prompt(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1025, in generate_prompt
+    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 842, in generate
+    self._generate_with_cache(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1091, in _generate_with_cache
+    result = self._generate(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_openai/chat_models/base.py", line 707, in _generate
+    response = self.client.create(**payload)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_utils/_utils.py", line 275, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/resources/chat/completions.py", line 829, in create
+    return self._post(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1278, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 955, in request
+    return self._request(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1059, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+2026-02-11 08:38:01 - agent_langgraph_simple - INFO - Executando agente...
+2026-02-11 08:38:01 - agent_langgraph_simple - ERROR - Falha agente: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
+Traceback (most recent call last):
+  File "/Users/samuel/Desktop/agente-martinha/agent_langgraph_simple.py", line 234, in run_agent_langgraph
+    result = agent.invoke(initial_state, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 3085, in invoke
+    for chunk in self.stream(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/main.py", line 2674, in stream
+    for _ in runner.tick(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_runner.py", line 162, in tick
+    run_with_retry(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/pregel/_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 657, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/_internal/_runnable.py", line 394, in invoke
+    ret = context.run(self.func, *args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langgraph/prebuilt/chat_agent_executor.py", line 635, in call_model
+    response = cast(AIMessage, static_model.invoke(model_input, config))  # type: ignore[union-attr]
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 3254, in invoke
+    input_ = context.run(step.invoke, input_, config)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/runnables/base.py", line 5720, in invoke
+    return self.bound.invoke(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 395, in invoke
+    self.generate_prompt(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1025, in generate_prompt
+    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 842, in generate
+    self._generate_with_cache(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_core/language_models/chat_models.py", line 1091, in _generate_with_cache
+    result = self._generate(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/langchain_openai/chat_models/base.py", line 707, in _generate
+    response = self.client.create(**payload)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_utils/_utils.py", line 275, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/resources/chat/completions.py", line 829, in create
+    return self._post(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1278, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 955, in request
+    return self._request(
+  File "/Users/samuel/Library/Python/3.9/lib/python/site-packages/openai/_base_client.py", line 1059, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'code': 'Client specified an invalid argument', 'error': 'Incorrect API key provided: sk***EA. You can obtain an API key from https://console.x.ai.'}
